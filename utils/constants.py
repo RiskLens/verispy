@@ -8,3 +8,8 @@ A4NAMES = {'actor': ['External', 'Internal', 'Partner', 'Unknown'],
            'attribute': ['Confidentiality', 'Integrity', 'Availability'],
            'asset': {'variety': list(ASSETMAP.values()), 
                      'assets.variety': list(ASSETMAP.keys())}}
+SMALL_ORG_SUFFIXES = ['1 to 10', '11 to 100', '101 to 1000', 'Small']
+LARGE_ORG_SUFFIXES = ['1001 to 10000', '10001 to 25000', '25001 to 50000', '50001 to 100000', 'Over 100000', 'Large']
+SMALL_ORG = ['.'.join(('victim.employee_count', suffix)) for suffix in SMALL_ORG_SUFFIXES]
+LARGE_ORG = ['.'.join(('victim.employee_count', suffix)) for suffix in LARGE_ORG_SUFFIXES]
+ORG_SMALL_LARGE = {'victim.orgsize.Small' : SMALL_ORG, 'victim.orgsize.Large' : LARGE_ORG}

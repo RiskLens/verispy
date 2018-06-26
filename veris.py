@@ -53,8 +53,10 @@ class VERIS(object):
         for j in filenames:
             with open(j, 'r') as f:
                 jf = json.load(f)
-            jsons.append(pd.io.json.json_normalize(jf))
-        df_comb = pd.concat(jsons)
+            #jsons.append(pd.io.json.json_normalize(jf))
+            jsons.append(jf)
+        #df_comb = pd.concat(jsons)
+        df_comb = pd.io.json.json_normalize(jsons)
         if verbose : print('Finished loading JSON files to dataframe.')
 
         return df_comb
@@ -172,7 +174,7 @@ class VERIS(object):
                     comb_df[var] = False
 
         # need to drop these columns
-        comb_df.drop(veris_const.VARIETY_AMT_ENUMS, inplace=True)
+        #comb_df.drop(veris_const.VARIETY_AMT_ENUMS, inplace=True)
 
         return comb_df
 
@@ -212,12 +214,19 @@ class VERIS(object):
         return df
 
 
-    def _nonenum_columns_schema(self, schema):
-        pass
+    #def _nonenum_columns_schema(self, schema):
+        """ The purpose of this function will be to determine all the columns that are possible in a VERIS data frame
+        based on the schema. As of right now, we are not missing any necessary columns if we load and format *all* the 
+        data in the VCDB, so perhaps we will hold off creating this function for later. In large part this
+        is because we have to do some recursion like we did when getting the enumerations; however we have to ignore 
+        the things we already found.
+
+        """
+    #   pass
 
 
-    def _victim_industries(self, df):
-        """ Fill in the victim industries with the 2-digit and 3-digit enumerations columns
+    def _victim_postproc(self, df):
+        """ Fill in the victim industries with the 2-digit and 3-digit enumerations columns. And more info about orgsize
 
         Parameters
         ----------
@@ -230,8 +239,8 @@ class VERIS(object):
         """
 
         # get victim industry 2 and 3
-        df['victim.industry2'] = df['victim.industry'].apply(lambda x: x[:2])
-        df['victim.industry3'] = df['victim.industry'].apply(lambda x: x[:3])
+        df['victim.industry2'] = df['victim.industry'].apply(lambda x: str(x)[:2])
+        df['victim.industry3'] = df['victim.industry'].apply(lambda x: str(x)[:3])
 
         # victim industry name
         known_ind_codes = list(industry_const.INDUSTRY_BY_CODE.keys())
@@ -242,6 +251,14 @@ class VERIS(object):
         for code in df['victim.industry2'].unique():
             colname = '.'.join(('victim.industry2', code))
             df[colname] = df['victim.industry2'].apply(lambda x: True if x == code else False)
+
+        # partner industry
+        df['actor.partner.industry2'] = df['actor.partner.industry'].apply(lambda x: str(x)[:2])
+
+        # next fill out orgsize
+        for orgsize, orgcols in veris_const.ORG_SMALL_LARGE.items():
+            df[orgsize] = df[[col for col in df.columns if col in orgcols]].sum(axis = 1)
+            df[orgsize] = df[orgsize].apply(lambda x: True if x >= 1 else False)
 
         return df
 
@@ -258,7 +275,6 @@ class VERIS(object):
         None -- Saved into the `self.vschema` attribute of the VERIS object 
 
         """
-
         if schema_path:  # load from the local computer if possible
             self.schema_path = schema_path
             with open(schema_path, 'r') as f:
@@ -268,7 +284,6 @@ class VERIS(object):
                 self.schema_url = schema_url
             with urllib.request.urlopen(self.schema_url) as url:
                 vschema = json.loads(url.read().decode())
-            
         self.vschema = vschema
 
 
@@ -306,7 +321,7 @@ class VERIS(object):
         comb_df = self._a4names(comb_df)
 
         # victim industries
-        comb_df = self._victim_industries(comb_df)
+        comb_df = self._victim_postproc(comb_df)
 
 
         ## TODO: Do we really want to return the combined dataframe or hold it in the VERIS object? I think return it.
