@@ -289,7 +289,19 @@ class VERIS(object):
 
 
     def get_pattern(self, df):
+        """ Generates the patterns as described originally in the 2014 DBIR. 
+        This function is is almost an exact port from the verisr package: https://github.com/vz-risk/verisr/blob/a293801eb92dda9668844f4f7be14bf5c685d764/R/matrix.R#L78
 
+        Parameters
+        ----------
+        df: pd DataFrame - VERIS-formatted Pandas DataFrame. This function likely won't work unless you've already 
+           almost completely generated the VERIS df.
+
+        Returns
+        -------
+        A new pd DataFrame with the patterns. Note: does not return the original VERIS data frame
+
+        """
         return get_pattern(df) 
 
     def json2dataframe(self, filenames, keep_raw=False, verbose=False, schema_path=None, schema_url=None):
@@ -328,8 +340,10 @@ class VERIS(object):
         # victim industries
         comb_df = self._victim_postproc(comb_df)
 
-
-        ## TODO: Do we really want to return the combined dataframe or hold it in the VERIS object? I think return it.
+        # add in the breach "patterns"
+        patterns = self.get_pattern(comb_df)
+        comb_df = pd.concat([comb_df, patterns], axis=1)
+        
         return comb_df
 
 
