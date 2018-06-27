@@ -8,6 +8,7 @@ import glob
 
 from verispy.utils import industry as industry_const
 from verispy.utils import constants as veris_const
+from verispy.patterns import get_pattern
 
 class VERIS(object):
     """ 
@@ -286,6 +287,10 @@ class VERIS(object):
                 vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
+
+    def get_pattern(self, df):
+
+        return get_pattern(df) 
 
     def json2dataframe(self, filenames, keep_raw=False, verbose=False, schema_path=None, schema_url=None):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame
