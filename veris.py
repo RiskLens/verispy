@@ -6,10 +6,6 @@ import json
 import urllib.request
 import glob
 
-#from verispy.utils import industry as industry_const
-#from verispy.utils import constants as veris_const
-#from verispy.patterns import get_pattern
-
 from .utils import industry as industry_const
 from .utils import constants as veris_const
 from .patterns import get_pattern
@@ -143,13 +139,17 @@ class VERIS(object):
         def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):  # TODO: NEEDS TO HANDLE AMOUNTS NOT JUST VARIETIES!
             if type(dfitem) is list:
                 for value in dfitem:
-                    if type(value) is dict and variety_or_amt in value.keys():
-                        if value[variety_or_amt] == enumitem:
+                    if type(value) is dict and variety_or_amt in value.keys() and value['variety'] == enumitem:
+                        if variety_or_amt == 'variety':  
                             return True
+                        elif variety_or_amt == 'amount':
+                            return value[variety_or_amt]
                     if type(value) is str:
                         if value == enumitem:
                             return True
-            return False
+
+            # if found nothing, return value depends on whether this is a variety or amount
+            return False if variety_or_amt == 'variety' else None
 
 
         comb_df = pd.DataFrame()
