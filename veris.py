@@ -6,9 +6,14 @@ import json
 import urllib.request
 import glob
 
-from verispy.utils import industry as industry_const
-from verispy.utils import constants as veris_const
-from verispy.patterns import get_pattern
+#from verispy.utils import industry as industry_const
+#from verispy.utils import constants as veris_const
+#from verispy.patterns import get_pattern
+
+from .utils import industry as industry_const
+from .utils import constants as veris_const
+from .patterns import get_pattern
+
 
 class VERIS(object):
     """ 
@@ -54,9 +59,7 @@ class VERIS(object):
         for j in filenames:
             with open(j, 'r') as f:
                 jf = json.load(f)
-            #jsons.append(pd.io.json.json_normalize(jf))
             jsons.append(jf)
-        #df_comb = pd.concat(jsons)
         df_comb = pd.io.json.json_normalize(jsons)
         if verbose : print('Finished loading JSON files to dataframe.')
 
@@ -137,7 +140,7 @@ class VERIS(object):
                     return True
             return False
 
-        def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):
+        def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):  # TODO: NEEDS TO HANDLE AMOUNTS NOT JUST VARIETIES!
             if type(dfitem) is list:
                 for value in dfitem:
                     if type(value) is dict and variety_or_amt in value.keys():
@@ -157,7 +160,7 @@ class VERIS(object):
                 for item in enums[col]:
                     newvarname = '.'.join((col, item))
                     comb_df[newvarname] = raw_df[col].apply(lambda x: enum_checker(x, item))
-            elif col in veris_const.VARIETY_AMT_ENUMS:
+            elif col in veris_const.VARIETY_AMT_ENUMS:  # handle "variety" and "amount" pairs separately
                 for variety_or_amt in veris_const.VARIETY_AMT:
                     enum_var_or_amt = '.'.join((col, variety_or_amt))
                     for item in enums[enum_var_or_amt]:
@@ -343,7 +346,7 @@ class VERIS(object):
         # add in the breach "patterns"
         patterns = self.get_pattern(comb_df)
         comb_df = pd.concat([comb_df, patterns], axis=1)
-        
+
         return comb_df
 
 
