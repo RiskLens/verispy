@@ -208,13 +208,24 @@ class VERIS(object):
             else:
                 for suffix in veris_const.A4NAMES[name]:
                     fullname = '.'.join((name, suffix))
+                    searchname = fullname.lower()
+                    searchnames = ['.'.join((attr, suffix)) for attr in self.enumerations \
+                                   for suffix in self.enumerations[attr] if attr.startswith(searchname)]
+                    df[fullname] = df[searchnames].sum(axis=1)
+
                     if suffix == 'Confidentiality':
-                        searchname = '.'.join((fullname.lower(), 'data.variety'))
-                        #searchname = fullname.lower()
+                        # TODO: current functionality matches what is done in verisr; however, that appears to be a bug
+                        # what we need to do is remove attribute.confidentiality.data_disclosure.No, 
+                        # and attribute.confidentiality.data_disclosure.Unknown, and possibly
+                        # attribute.confidentiality.data_disclosure.Potentially. However, since this is currently
+                        # in verisr, I'm going to hold off until I can verify further (or possibly ignore??)
+                        pass
+                    elif suffix == 'Unknown': # actor.Unknown, action.Unknown, need to handle this
+                        print(searchnames)
                     else:
-                        searchname = '.'.join((fullname.lower(), 'variety'))
-                        #searchname = fullname.lower()
-                    df[fullname] = df[[col for col in df.columns if col.startswith(searchname)]].sum(axis = 1)
+                        pass
+                        #searchname = '.'.join((fullname.lower(), 'variety'))
+                        #df[fullname] = df[[col for col in df.columns if col.startswith(searchname)]].sum(axis = 1)
                     df[fullname] = df[fullname].apply(lambda x: True if x >= 1 else False)
 
         return df
@@ -246,7 +257,7 @@ class VERIS(object):
 
         # get victim industry 2 and 3
         df['victim.industry2'] = df['victim.industry'].apply(lambda x: str(x)[:2] if not pd.isnull(x) else None)
-        df['victim.industry3'] = df['victim.industry'].apply(lambda x: str(x)[:2] if not pd.isnull(x) else None)
+        df['victim.industry3'] = df['victim.industry'].apply(lambda x: str(x)[:3] if not pd.isnull(x) else None)
 
         # victim industry name
         known_ind_codes = list(industry_const.INDUSTRY_BY_CODE.keys())
