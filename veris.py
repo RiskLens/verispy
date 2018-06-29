@@ -210,8 +210,10 @@ class VERIS(object):
                     fullname = '.'.join((name, suffix))
                     if suffix == 'Confidentiality':
                         searchname = '.'.join((fullname.lower(), 'data.variety'))
+                        #searchname = fullname.lower()
                     else:
                         searchname = '.'.join((fullname.lower(), 'variety'))
+                        #searchname = fullname.lower()
                     df[fullname] = df[[col for col in df.columns if col.startswith(searchname)]].sum(axis = 1)
                     df[fullname] = df[fullname].apply(lambda x: True if x >= 1 else False)
 
@@ -243,8 +245,8 @@ class VERIS(object):
         """
 
         # get victim industry 2 and 3
-        df['victim.industry2'] = df['victim.industry'].apply(lambda x: str(x)[:2])
-        df['victim.industry3'] = df['victim.industry'].apply(lambda x: str(x)[:3])
+        df['victim.industry2'] = df['victim.industry'].apply(lambda x: str(x)[:2] if not pd.isnull(x) else None)
+        df['victim.industry3'] = df['victim.industry'].apply(lambda x: str(x)[:2] if not pd.isnull(x) else None)
 
         # victim industry name
         known_ind_codes = list(industry_const.INDUSTRY_BY_CODE.keys())
@@ -257,7 +259,7 @@ class VERIS(object):
             df[colname] = df['victim.industry2'].apply(lambda x: True if x == code else False)
 
         # partner industry
-        df['actor.partner.industry2'] = df['actor.partner.industry'].apply(lambda x: str(x)[:2])
+        df['actor.partner.industry2'] = df['actor.partner.industry'].apply(lambda x: str(x)[:2] if not pd.isnull(x) else None)
 
         # next fill out orgsize
         for orgsize, orgcols in veris_const.ORG_SMALL_LARGE.items():
