@@ -72,19 +72,22 @@ class VERIS(object):
 
         Returns
         -------
-        list of dictionaries of the schema, to be parsed by self._build_enumerations_dict
+        list of dictionaries of the schema
         """
-        if type(schema) is dict:
-            if 'properties' in schema.keys():
-                return self._enums_from_schema(schema['properties'], curvarname, outlist)
-            elif 'items' in schema.keys():
+        if type(schema) is dict: 
+
+            if 'items' in schema.keys():
                 if 'enum' in schema['items'].keys():
-                    return {'name': curvarname, 'enumlist': schema['items']['enum']}
-                elif 'properties' in schema['items'].keys():
-                    return self._enums_from_schema(schema['items']['properties'], curvarname, outlist)
-            elif 'enum' in schema.keys(): # not nested within items
-                return {'name': curvarname, 'enumlist': schema['enum']}
-                #return {curvarname: schema['enum']}
+                    return {'name': curvarname, 'enumlist': schema['items']['enum'], 'type': schema['type']}
+                else:
+                    return self._enums_from_schema(schema['items'], curvarname, outlist)
+            elif 'type' in schema.keys():
+                if schema['type'] == 'object' and 'properties' in schema.keys():
+                    return self._enums_from_schema(schema['properties'], curvarname, outlist)
+                elif 'enum' in schema.keys():
+                    return {'name': curvarname, 'enumlist': schema['enum'], 'type': schema['type']}
+                else:
+                    return {'name': curvarname, 'type': schema['type']}
             else:
                 for key in schema.keys():
                     newvarname = '.'.join((curvarname, key)) if len(curvarname) > 0 else key
@@ -98,19 +101,6 @@ class VERIS(object):
                 
         return outlist
 
-    def _build_enumerations_dict(self, schema):
-        """ Builds the dictionary of enumeration top-level variables and the sub-variables
-
-        Parameters
-        ----------
-        schema: dict, The VERIS schema JSON, loaded in the json2dataframe
-
-        Returns
-        -------
-        dict of enumeration_var: [list_of_vars] for all the enumeration variables
-        """
-        enum_list = self._enums_from_schema(schema, '', [])
-        return {item['name']: item['enumlist'] for item in enum_list}
 
     def _combine_enums_raw_df(self, enums, raw_df):
         """ Combine the raw data frame with the enumerations from that data frame
@@ -236,18 +226,6 @@ class VERIS(object):
 
         return df
 
-
-    #def _nonenum_columns_schema(self, schema):
-        """ The purpose of this function will be to determine all the columns that are possible in a VERIS data frame
-        based on the schema. As of right now, we are not missing any necessary columns if we load and format *all* the 
-        data in the VCDB, so perhaps we will hold off creating this function for later. In large part this
-        is because we have to do some recursion like we did when getting the enumerations; however we have to ignore 
-        the things we already found.
-
-        """
-    #   pass
-
-
     def _victim_postproc(self, df):
         """ Fill in the victim industries with the 2-digit and 3-digit enumerations columns. And more info about orgsize
 
@@ -352,9 +330,15 @@ class VERIS(object):
 
         # build the enumerations
         if verbose : print('Building DataFrame with enumerations.')
-        self.enumerations = self._build_enumerations_dict(self.vschema)
+        #self.enumerations = self._build_enumerations_dict(self.vschema)
+
+        enum_list = self._enums_from_schema(self.vschema, '', [])
+        self.enumerations = {item['name']: item['enumlist'] for item in enum_list if 'enumlist' in item}
+        self.nonenum_vars = [item for item in enum_list if 'enumlist' not in item]
 
         comb_df = self._combine_enums_raw_df(self.enumerations, raw_df)
+
+        # TODO: ADD IN nonenum_vars TO DATAFRAME!
 
         if verbose : print('Done building DataFrame with enumerations.')
 
