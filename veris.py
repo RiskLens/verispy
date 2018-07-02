@@ -102,12 +102,13 @@ class VERIS(object):
         return outlist
 
 
-    def _combine_enums_raw_df(self, enums, raw_df):
+    def _combine_enums_raw_df(self, enums, non_enums, raw_df):
         """ Combine the raw data frame with the enumerations from that data frame
 
         Parameters
         ----------
         enums: dict, output of `_build_enumerations_dict`
+        non_enums: list, the non-enumeration variables
         raw_df: pd DataFrame, output of `_rawjson2dataframe`
 
         Returns
@@ -166,6 +167,20 @@ class VERIS(object):
                 var = '.'.join((enum, suffix))
                 if var not in comb_df_cols:
                     comb_df[var] = False
+
+        # add in the variables which were not enumeations
+        comb_df_cols = comb_df.columns
+        for vardict in non_enums:
+            varname = vardict['name']
+            vartype = vardict['type']
+            if varname not in comb_df_cols:  # only add the columns in that haven't already been added
+                if vartype == 'string':
+                    comb_df[varname] = None
+                elif vartype == 'integer' or vartype == 'number':
+                    comb_df[varname] = np.nan
+                else:
+                    comb_df[varname] = None 
+
 
         return comb_df
 
@@ -248,7 +263,7 @@ class VERIS(object):
             lambda x: industry_const.INDUSTRY_BY_CODE[x]['shorter'] if x in known_ind_codes else 'Unknown')
 
         # fill out the 2-digit code columns
-        for code in df['victim.industry2'].unique():
+        for code in industry_const.INDUSTRY_BY_CODE.keys(): #df['victim.industry2'].unique():
             colname = '.'.join(('victim.industry2', code))
             df[colname] = df['victim.industry2'].apply(lambda x: True if x == code else False)
 
@@ -336,7 +351,7 @@ class VERIS(object):
         self.enumerations = {item['name']: item['enumlist'] for item in enum_list if 'enumlist' in item}
         self.nonenum_vars = [item for item in enum_list if 'enumlist' not in item]
 
-        comb_df = self._combine_enums_raw_df(self.enumerations, raw_df)
+        comb_df = self._combine_enums_raw_df(self.enumerations, self.nonenum_vars, raw_df)
 
         # TODO: ADD IN nonenum_vars TO DATAFRAME!
 
