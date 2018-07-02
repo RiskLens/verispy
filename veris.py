@@ -68,7 +68,7 @@ class VERIS(object):
         ----------
         schema: dict, The VERIS schema JSON, loaded in the json2dataframe
         curvarname: str, the current varname, gets used in the recursion process
-        outlist: list, list of dictionaries of the schema
+        outlist: list, list of dictionaries of the enumerations from the schema
 
         Returns
         -------
@@ -177,9 +177,6 @@ class VERIS(object):
                 if var not in comb_df_cols:
                     comb_df[var] = False
 
-        # need to drop these columns
-        #comb_df.drop(veris_const.VARIETY_AMT_ENUMS, inplace=True)
-
         return comb_df
 
     def _a4names(self, df):
@@ -220,13 +217,22 @@ class VERIS(object):
                         # attribute.confidentiality.data_disclosure.Potentially. However, since this is currently
                         # in verisr, I'm going to hold off until I can verify further (or possibly ignore??)
                         pass
-                    elif suffix == 'Unknown': # actor.Unknown, action.Unknown, need to handle this
-                        print(searchnames)
+                    elif suffix == 'Unknown': # actor.Unknown, action.Unknown -- should be complement of other A4 enums in its class
+                        # get all all other searchnames
+                        # TODO: This works but is a mess. would be better to fetch other A4 names after they are created (maybe?)
+                        unk_searchnames = ['.'.join((name, suff.lower())) for suff in veris_const.A4NAMES[name] \
+                                           if suff != 'Unknown']
+                        unk_searchnames_long = ['.'.join((attr, suffix)) for attr in self.enumerations \
+                                                for suffix in self.enumerations[attr] \
+                                                for searchname in unk_searchnames \
+                                                if attr.startswith(searchname) ]
+                        df[fullname] = df[unk_searchnames_long].sum(axis=1)
+                        df[fullname] = -(df[fullname] - 1) # trick to get True/False working right
                     else:
                         pass
-                        #searchname = '.'.join((fullname.lower(), 'variety'))
-                        #df[fullname] = df[[col for col in df.columns if col.startswith(searchname)]].sum(axis = 1)
                     df[fullname] = df[fullname].apply(lambda x: True if x >= 1 else False)
+
+
 
         return df
 
@@ -248,7 +254,6 @@ class VERIS(object):
         Parameters
         ----------
         df: pd DataFrame with at least a `victim.industry` column
-
 
         Returns
         -------
@@ -329,6 +334,9 @@ class VERIS(object):
         filenames: List of filenames of VERIS-schema files to open. 
         keep_raw: bool, Keep the raw data frame, created before creating the enumerations?
         verbose: bool, print messages during processing
+        schema_path: str, if you wish to load the schema from local memory
+        schema_url: str, if you wish to specify the path to the schema. schema_path takes precedence if populated. 
+                    Check the object's `schema_url` attribute first 
 
         Return
         ------
@@ -351,6 +359,7 @@ class VERIS(object):
         if verbose : print('Done building DataFrame with enumerations.')
 
         # add in A4 names
+        if verbose: print('Post-Processing DataFrame (A4 Names, Victim Industries, Patterns)')
         comb_df = self._a4names(comb_df)
 
         # victim industries
@@ -360,14 +369,8 @@ class VERIS(object):
         patterns = self.get_pattern(comb_df)
         comb_df = pd.concat([comb_df, patterns], axis=1)
 
+        if verbose: print('Finished building VERIS DataFrame')
+
         return comb_df
-
-
-# TODO: automated tests
-
-
-
-
-
 
 
