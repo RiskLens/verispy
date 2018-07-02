@@ -353,8 +353,6 @@ class VERIS(object):
 
         comb_df = self._combine_enums_raw_df(self.enumerations, self.nonenum_vars, raw_df)
 
-        # TODO: ADD IN nonenum_vars TO DATAFRAME!
-
         if verbose : print('Done building DataFrame with enumerations.')
 
         # add in A4 names
