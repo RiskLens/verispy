@@ -61,7 +61,7 @@ class VERIS(object):
 
         return df_comb
 
-    def _enums_from_schema(self, schema, curvarname = '', outlist = []):
+    def _enums_from_schema(self, schema, curvarname='', outlist=[]):
         """ Recursively determine the enumerations from the schema
 
         Parameters
@@ -205,7 +205,7 @@ class VERIS(object):
                 for suffix in assetdict['variety']:
                     fullname = '.'.join((varname, suffix))
                     searchname = '.'.join((name, 'assets.variety', revassetmap[suffix]))
-                    df[fullname] = df[[col for col in df.columns if col.startswith(searchname)]].sum(axis = 1)
+                    df[fullname] = df[[col for col in df.columns if col.startswith(searchname)]].sum(axis=1)
                     df[fullname] = df[fullname].apply(lambda x: True if x >= 1 else False)
             else:
                 for suffix in veris_const.A4NAMES[name]:
@@ -365,6 +365,9 @@ class VERIS(object):
         # add in the breach "patterns"
         patterns = self.get_pattern(comb_df)
         comb_df = pd.concat([comb_df, patterns], axis=1)
+
+        # sort columns alphabetically
+        comb_df = comb_df.reindex(sorted(comb_df.columns), axis=1)
 
         if verbose: print('Finished building VERIS DataFrame')
 
