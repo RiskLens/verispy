@@ -37,6 +37,8 @@ class VERIS(object):
         self.enumerations = None
         self.vschema = None
         self.schema_path = None
+        self.matrix_enums = veris_const.MATRIX_ENUMS
+        self.matrix_ignore = veris_const.MATRIX_IGNORE
 
     def _rawjson2dataframe(self, filenames, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame.
@@ -127,7 +129,7 @@ class VERIS(object):
                     return True
             return False
 
-        def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):  # TODO: NEEDS TO HANDLE AMOUNTS NOT JUST VARIETIES!
+        def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):  
             if type(dfitem) is list:
                 for value in dfitem:
                     if type(value) is dict and variety_or_amt in value.keys() and value['variety'] == enumitem:
@@ -318,7 +320,7 @@ class VERIS(object):
         """
         return get_pattern(df) 
 
-    def json2dataframe(self, filenames, keep_raw=False, verbose=False, schema_path=None, schema_url=None):
+    def json2dataframe(self, filenames, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame
 
 
@@ -326,11 +328,11 @@ class VERIS(object):
         ----------
         filenames: List of filenames of VERIS-schema files to open. 
         keep_raw: bool, Keep the raw data frame, created before creating the enumerations?
-        verbose: bool, print messages during processing
         schema_path: str, if you wish to load the schema from local memory
         schema_url: str, if you wish to specify the path to the schema. schema_path takes precedence if populated. 
                     Check the object's `schema_url` attribute first 
-
+        verbose: bool, print messages during processing
+        
         Return
         ------
         pd DataFrame of the parsed, structured VERIS data
@@ -372,5 +374,38 @@ class VERIS(object):
         if verbose: print('Finished building VERIS DataFrame')
 
         return comb_df
+
+    def verisdf2matrix(self, df, bools_only=True):
+        """ Convert VERIS DataFrame to binary matrix for clustering
+
+        This function takes a DataFrame obtained through the `json2dataframe` function and converts it to a numpy
+        matrix for use with distance functions.  
+
+        To change the default variables filtered on, the user can change the `matrix_enums` or `matrix_ignore` attributes.  
+
+        Parameters:
+        -----------
+        df: Pandas DataFrame returned by `json2dataframe`
+        bools_only: Whether to return just the boolean enumerations. If False, will scale numerical values.
+
+        Returns:
+        --------
+        numpy array of 0-1 values for False-True, and scaled numerical values.
+        """
+
+
+        if bools_only:
+            boolvars = [col for col in df.columns if df[col].dtype == bool]
+            cols_enums = set([col for enum in self.matrix_enums for col in boolvars if col.startswith(enum)])
+            ignore_enums = set([enum for ignore in self.matrix_ignore for enum in cols_enums if ignore in enum])
+            keep_cols = list(cols_enums.difference(ignore_enums))
+            matrix = np.array(df[keep_cols]).astype(int)
+            # do we need to save off incident_id or anything like that?
+        else:
+            raise NotImplementedError('Need to implement bools_only=False logic.')
+
+        return matrix
+
+
 
 
