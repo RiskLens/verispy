@@ -404,6 +404,12 @@ class VERIS(object):
         else:
             raise NotImplementedError('Need to implement bools_only=False logic.')
 
+        # with the keep_cols, we need to hold on to the order of those columns *and* their types, as well as scaling
+        # factors if and when we implement that part of the code.  This would be helpful in many ways because
+        # it would allow us to perhaps pull out sections of the data and matricize it, and then find the "average" for 
+        # columns of interest.   
+
+
         return matrix
 
 
