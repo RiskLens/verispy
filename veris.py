@@ -5,6 +5,8 @@ import numpy as np
 import json
 import urllib.request
 import glob
+import warnings
+from statsmodels.stats.proportion import proportion_confint
 
 from .utils import industry as industry_const
 from .utils import constants as veris_const
@@ -393,7 +395,6 @@ class VERIS(object):
         numpy array of 0-1 values for False-True, and scaled numerical values.
         """
 
-
         if bools_only:
             boolvars = [col for col in df.columns if df[col].dtype == bool]
             cols_enums = set([col for enum in self.matrix_enums for col in boolvars if col.startswith(enum)])
@@ -403,14 +404,83 @@ class VERIS(object):
             # do we need to save off incident_id or anything like that?
         else:
             raise NotImplementedError('Need to implement bools_only=False logic.')
-
-        # with the keep_cols, we need to hold on to the order of those columns *and* their types, as well as scaling
-        # factors if and when we implement that part of the code.  This would be helpful in many ways because
-        # it would allow us to perhaps pull out sections of the data and matricize it, and then find the "average" for 
-        # columns of interest.   
+            # with the keep_cols, we need to hold on to the order of those columns *and* their types, as well as scaling
+            # factors if and when we implement that part of the code.  This would be helpful in many ways because
+            # it would allow us to perhaps pull out sections of the data and matricize it, and then find the "average" for 
+            # columns of interest.   
 
 
         return matrix
+
+    def getenum_ci(self, df, enum, by=None, use_unk=False, ci_method=None, ci_level=0.95, round_freq=5):
+    
+        ## TODO: FINISH DOCUMENTATION. 
+        '''
+        Parameters:
+        ----------
+        df: pd DataFrame
+        enum: string, variable to use
+        by: string, default None, variable to segment by
+        use_unk: bool, Use 'Unknown' values in the frequency calcs
+        ci_method: Use one of "wilson", "normal", or "agresti_coull" for best results. See `statsmodels.stats.proportion.proportion_confint` for more details.
+        ci_level: float, confidence interval to use
+        round_freq: int, decimals to round the frequency values to
+        
+        '''
+        
+        # get all the variables that start with enum (`enum.`)
+        keep_list = [col for col in df.columns if col.startswith('.'.join((enum, '')))]
+        # only keep the ones that are length 1 longer and boolean:
+        enum_len = len(enum.split('.'))
+        keep_list = [col for col in keep_list if len(col.split('.')) == enum_len + 1]
+        keep_list = [col for col in keep_list if df[col].dtype == 'bool']
+        
+        if by: # split into sub-dataframes if there is a `by` parameters
+            by_len = len(by.split('.'))
+            by_list = [col for col in df.columns if col.startswith('.'.join((by, '')))]
+            by_list = [col for col in by_list if len(col.split('.')) == by_len + 1]
+            by_list = [col for col in by_list if df[col].dtype == 'bool']
+            if len(by_list) == 0:
+                warnings.warn('Could not find columns matching "by" value "{}". Ignoring this value at this time.'.format(by))
+                subdfs = [(None, df)]
+            else:
+                subdfs = [(by_col, df[df[by_col]]) for by_col in by_list]
+        else:
+            subdfs = [(None, df)]
+        # get the number in the population
+        
+        outdfs = []
+        for curby, subdf in subdfs:
+            if use_unk:
+                count = subdf[keep_list].any(axis=1).sum()
+            else:
+                count = subdf[[col for col in keep_list if col.split('.')[-1].lower() != 'unknown']].any(axis=1).sum()
+
+            enum_dict = {'by': [], 'enum': [], 'x': [], 'n': []}
+            for var in keep_list:
+                var_suff = var.split('.')[-1]
+                enum_dict['by'].append(curby)
+                enum_dict['enum'].append(var_suff)
+                enum_dict['x'].append(subdf[var].sum())
+                if var_suff.lower() != 'unknown' or use_unk:
+                    enum_dict['n'].append(count)
+                else:
+                    enum_dict['n'].append(np.nan)
+            out_df = pd.DataFrame(enum_dict)
+            out_df['freq'] = np.round(out_df['x'] / out_df['n'], round_freq)
+            out_df.sort_values(by=['freq'], ascending=False, inplace=True)
+            out_df.reset_index(inplace=True, drop=True)
+            outdfs.append(out_df)
+            
+        out_df = pd.concat(outdfs)
+        if not by:
+            out_df.drop('by', axis=1, inplace=True)
+
+        if ci_method:
+            out_df['method'] = ci_method
+            out_df['lower'], out_df['upper'] = proportion_confint(out_df['x'], out_df['n'], alpha=1-ci_level, method=ci_method)
+        
+        return out_df
 
 
 
