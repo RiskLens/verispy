@@ -413,7 +413,6 @@ class VERIS(object):
         return matrix
 
     def getenum_ci(self, df, enum, by=None, use_unk=False, ci_method=None, ci_level=0.95, round_freq=5):
-    
         ''' Build summary DataFrame given a VERIS enumeration
 
         This is the primary analysis function for `verispy`. It conducts binomial hypothesistests on veris data to enumerate 
@@ -450,10 +449,16 @@ class VERIS(object):
         '''
         
         # get all the variables that start with enum (`enum.`) and only keep the ones that are length 1 longer and boolean:
-        enum_len = len(enum.split('.'))
-        keep_list = [col for col in df.columns if col.startswith('.'.join((enum, '')))]
-        keep_list = [col for col in keep_list if len(col.split('.')) == enum_len + 1]
-        keep_list = [col for col in keep_list if df[col].dtype == 'bool']
+
+        if enum in df.columns and df[enum].dtype in ['int', 'float']:
+            enum_is_col = True
+            keep_list = list(set(df[enum]))
+        else:
+            enum_is_col = False
+            enum_len = len(enum.split('.'))
+            keep_list = [col for col in df.columns if col.startswith('.'.join((enum, '')))]
+            keep_list = [col for col in keep_list if len(col.split('.')) == enum_len + 1]
+            keep_list = [col for col in keep_list if df[col].dtype == 'bool']
         
         if by: # split into sub-dataframes if there is a `by` parameters
             # need to be able to tell if "by" is already a column (like `timeline.incident.year`, or if we are looking at enumerations of it)
@@ -469,6 +474,7 @@ class VERIS(object):
                 by_list = [col for col in by_list if df[col].dtype == 'bool']
                 if len(by_list) == 0:
                     warnings.warn('Could not find enumeration columns matching "by" value "{}". Ignoring this value at this time.'.format(by))
+                    by = None
                     subdfs = [(None, df)]
                 else:
                     subdfs = [(by_col, df[df[by_col]]) for by_col in by_list]
@@ -478,21 +484,33 @@ class VERIS(object):
         # Calculate the enumerations. Because of `subdfs` structure, doing whole dataframe or subsets can be done at once
         outdfs = []
         for curby, subdf in subdfs:
-            if use_unk:
-                count = subdf[keep_list].any(axis=1).sum()
+            if enum_is_col:
+                count = subdf.shape[0]
             else:
-                count = subdf[[col for col in keep_list if col.split('.')[-1].lower() != 'unknown']].any(axis=1).sum()
+                if use_unk:  # what if enum_is_col
+                    count = subdf[keep_list].any(axis=1).sum()
+                else:
+                    count = subdf[[col for col in keep_list if col.split('.')[-1].lower() != 'unknown']].any(axis=1).sum()
 
             enum_dict = {'by': [], 'enum': [], 'x': [], 'n': []}
-            for var in keep_list:
-                var_suff = var.split('.')[-1]
-                enum_dict['by'].append(curby)
-                enum_dict['enum'].append(var_suff)
-                enum_dict['x'].append(subdf[var].sum())
-                if var_suff.lower() != 'unknown' or use_unk:
-                    enum_dict['n'].append(count)
-                else:
-                    enum_dict['n'].append(np.nan)
+            if enum_is_col:
+                for val in keep_list:
+                    num_this_val = subdf[subdf[enum] == val].shape[0]
+                    if num_this_val == 0: continue
+                    enum_dict['by'].append(curby)
+                    enum_dict['n'].append(count) # check this
+                    enum_dict['enum'].append(val)
+                    enum_dict['x'].append(num_this_val)
+            else:
+                for var in keep_list:
+                    var_suff = var.split('.')[-1]
+                    enum_dict['by'].append(curby)
+                    enum_dict['enum'].append(var_suff)
+                    enum_dict['x'].append(subdf[var].sum())
+                    if var_suff.lower() != 'unknown' or use_unk:
+                        enum_dict['n'].append(count)
+                    else:
+                        enum_dict['n'].append(np.nan)
             out_df = pd.DataFrame(enum_dict)
             out_df['freq'] = np.round(out_df['x'] / out_df['n'], round_freq)
             out_df.sort_values(by=['freq'], ascending=False, inplace=True)
@@ -505,7 +523,7 @@ class VERIS(object):
 
         if ci_method:
             out_df['method'] = ci_method
-            out_df['lower'], out_df['upper'] = proportion_confint(out_df['x'], out_df['n'], alpha=1-ci_level, method=ci_method)
+            out_df['lower'], out_df['upper'] = np.round(proportion_confint(out_df['x'], out_df['n'], alpha=1-ci_level, method=ci_method), round_freq)
         
         return out_df
 
