@@ -1,0 +1,8 @@
+include LICENSE
+
+include *.txt
+recursive-include docs *.txt
+
+# necessary for tests to run
+include verispy/tests/data/*.json
+
