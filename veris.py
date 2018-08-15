@@ -414,41 +414,68 @@ class VERIS(object):
 
     def getenum_ci(self, df, enum, by=None, use_unk=False, ci_method=None, ci_level=0.95, round_freq=5):
     
-        ## TODO: FINISH DOCUMENTATION. 
-        '''
-        Parameters:
+        ''' Build summary DataFrame given a VERIS enumeration
+
+        This is the primary analysis function for `verispy`. It conducts binomial hypothesistests on veris data to enumerate 
+        the frequency of a given enumeration or set of enumerations within a feature. (For example, 'Malware', 'Hacking', etc within 'action').
+        The 'by' parameter allows enumerating one feature by another, (for example to count the frequency of each action by year).
+
+        Parameters
         ----------
         df: pd DataFrame
-        enum: string, variable to use
-        by: string, default None, variable to segment by
-        use_unk: bool, Use 'Unknown' values in the frequency calcs
-        ci_method: Use one of "wilson", "normal", or "agresti_coull" for best results. See `statsmodels.stats.proportion.proportion_confint` for more details.
-        ci_level: float, confidence interval to use
-        round_freq: int, decimals to round the frequency values to
+            DataFrame from the `json2dataframe` function
+        enum: string
+            VERIS feature or enumeration to summarize
+        by: string, optional (default: None)
+            VERIS feature or enumeration to group by
+        use_unk: bool, optional (default: False) 
+            Use 'Unknown' values in the frequency calculations
+        ci_method: str, optional (default: None) 
+            Method to use for producing the confidence intervals. Use one of "wilson", "normal", or "agresti_coull" for best results. 
+            See `statsmodels.stats.proportion.proportion_confint` for more details.
+        ci_level: float, optional (default: 0.95)
+            Confidence interval to use when specifying the `ci_method`
+        round_freq: int (default: 5) 
+            Decimal places to round the frequency values to
+
+        Returns
+        -------
+        pd DataFrame
+            DataFrame with the enumeration summary. 
+
+        See Also
+        --------
+        statsmodels.stats.proportion.proportion_confint: confidence interval for a binomial proportion
         
         '''
         
-        # get all the variables that start with enum (`enum.`)
-        keep_list = [col for col in df.columns if col.startswith('.'.join((enum, '')))]
-        # only keep the ones that are length 1 longer and boolean:
+        # get all the variables that start with enum (`enum.`) and only keep the ones that are length 1 longer and boolean:
         enum_len = len(enum.split('.'))
+        keep_list = [col for col in df.columns if col.startswith('.'.join((enum, '')))]
         keep_list = [col for col in keep_list if len(col.split('.')) == enum_len + 1]
         keep_list = [col for col in keep_list if df[col].dtype == 'bool']
         
         if by: # split into sub-dataframes if there is a `by` parameters
-            by_len = len(by.split('.'))
-            by_list = [col for col in df.columns if col.startswith('.'.join((by, '')))]
-            by_list = [col for col in by_list if len(col.split('.')) == by_len + 1]
-            by_list = [col for col in by_list if df[col].dtype == 'bool']
-            if len(by_list) == 0:
-                warnings.warn('Could not find columns matching "by" value "{}". Ignoring this value at this time.'.format(by))
-                subdfs = [(None, df)]
-            else:
-                subdfs = [(by_col, df[df[by_col]]) for by_col in by_list]
+            # need to be able to tell if "by" is already a column (like `timeline.incident.year`, or if we are looking at enumerations of it)
+            if by in df.columns and df[by].dtype in ['int', 'float']:   # `by` is a column and an int or float
+                uniques = set(df[by])
+                # remove nans
+                uniques = {x for x in uniques if x==x}
+                subdfs = [(unique_val, df[df[by] == unique_val]) for unique_val in uniques]
+            else:  # check to see if `by` is an enumeration (should we do this check before the column check? Does it matter?)
+                by_len = len(by.split('.'))
+                by_list = [col for col in df.columns if col.startswith('.'.join((by, '')))]
+                by_list = [col for col in by_list if len(col.split('.')) == by_len + 1]
+                by_list = [col for col in by_list if df[col].dtype == 'bool']
+                if len(by_list) == 0:
+                    warnings.warn('Could not find enumeration columns matching "by" value "{}". Ignoring this value at this time.'.format(by))
+                    subdfs = [(None, df)]
+                else:
+                    subdfs = [(by_col, df[df[by_col]]) for by_col in by_list]
         else:
             subdfs = [(None, df)]
-        # get the number in the population
         
+        # Calculate the enumerations. Because of `subdfs` structure, doing whole dataframe or subsets can be done at once
         outdfs = []
         for curby, subdf in subdfs:
             if use_unk:
@@ -481,7 +508,4 @@ class VERIS(object):
             out_df['lower'], out_df['upper'] = proportion_confint(out_df['x'], out_df['n'], alpha=1-ci_level, method=ci_method)
         
         return out_df
-
-
-
 
