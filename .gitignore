@@ -2,3 +2,8 @@ __pycache__
 *.pyc
 .ipynb_checkpoints
 .pytest_cache
+
+# setuptools dist folder, egg metadata
+dist/
+*egg-info
+

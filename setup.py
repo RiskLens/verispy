@@ -9,9 +9,9 @@ setup(
 	description='Parses VCDB json data into a Pandas DataFrame and provides useful analytic functions',
 	author='Tyler Byers',
 	author_email='tbyers@risklens.com',
-	packages=['verispy', 'versipy.tests'],
+	packages=['verispy', 'verispy.tests'],
 	license='LICENSE.txt',
-	long_description=open('README.txt').read(),
+	#long_description=open('README.txt').read(),
 	install_requires=install_requires,
 	include_package_data=True
 )
