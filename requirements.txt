@@ -1,4 +1,6 @@
-pytest==3.5.1
-pandas==0.23.0
 numpy==1.14.3
+pytest==3.5.1
+setuptools==39.1.0
 statsmodels==0.9.0
+matplotlib==2.2.2
+pandas==0.23.0
