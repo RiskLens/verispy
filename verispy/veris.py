@@ -1,5 +1,3 @@
-# Code for building data frames from VERIS JSON files and working with them
-
 import pandas as pd
 import numpy as np
 import json
@@ -7,6 +5,7 @@ import urllib.request
 import glob
 import warnings
 from statsmodels.stats.proportion import proportion_confint
+import matplotlib.pyplot as plt
 
 from .utils import industry as industry_const
 from .utils import constants as veris_const
@@ -312,40 +311,53 @@ class VERIS(object):
 
         Parameters
         ----------
-        df: pd DataFrame - VERIS-formatted Pandas DataFrame. This function likely won't work unless you've already 
-           almost completely generated the VERIS df.
+        df: pd DataFrame
+            VERIS-formatted Pandas DataFrame. 
 
         Returns
         -------
-        A new pd DataFrame with the patterns. Note: does not return the original VERIS data frame
+        pd DataFrame
+            DataFrame with the patterns. Note: does not return the original VERIS data frame.
 
         """
         return get_pattern(df) 
 
     def json2dataframe(self, filenames, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
-        """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame
+        """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
+
+        This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
+        from JSON (easy to work with) to a pd DataFrame (slightly easier to work with). This function also requires a valid VERIS schema (in JSON format).
+        At the time of package creation, the VERIS schema was on the [veris GitHub](https://github.com/vz-risk/veris) at 
+        [https://raw.githubusercontent.com/vz-risk/veris/master/verisc-merged.json](https://raw.githubusercontent.com/vz-risk/veris/master/verisc-merged.json). 
+        This package also maintains a copy of the schema herein, in case it cannot find the schema online. The user may also specify a new url if needed.
 
 
         Parameters
         ----------
-        filenames: List of filenames of VERIS-schema files to open. 
-        keep_raw: bool, Keep the raw data frame, created before creating the enumerations?
-        schema_path: str, if you wish to load the schema from local memory
-        schema_url: str, if you wish to specify the path to the schema. schema_path takes precedence if populated. 
-                    Check the object's `schema_url` attribute first 
-        verbose: bool, print messages during processing
+        filenames: list
+            List of filenames of VERIS-schema files to open, ideally from the local file system.
+        keep_raw: bool (default: False)
+            Keep the raw data frame, created before creating the enumerations?  If `True`, it is stored in the `raw_df` attribute in the current object.
+        schema_path: str, optional (default: None)
+            Specify a path f you wish to load the schema from local memory.
+        schema_url: str, optional (default: None)
+            If you wish to specify the path to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
+            the schema location may already be in the object.
+        verbose: bool, (default: False)
+            Print progress messages during processing
         
-        Return
-        ------
-        pd DataFrame of the parsed, structured VERIS data
+        Returns
+        -------
+        pd DataFrame 
+            The parsed, structured VERIS data. This function will also populate the `enumerations` attribute, which may be useful. 
         """
+
+        # load schema
+        self.load_schema(schema_path, schema_url)
 
         raw_df = self._rawjson2dataframe(filenames, verbose)
 
         if keep_raw : self.raw_df = raw_df
-
-        # load schema
-        self.load_schema(schema_path, schema_url)
 
         # build the enumerations
         if verbose : print('Building DataFrame with enumerations.')
@@ -385,14 +397,17 @@ class VERIS(object):
 
         To change the default variables filtered on, the user can change the `matrix_enums` or `matrix_ignore` attributes.  
 
-        Parameters:
-        -----------
-        df: Pandas DataFrame returned by `json2dataframe`
-        bools_only: Whether to return just the boolean enumerations. If False, will scale numerical values.
+        Parameters
+        ----------
+        df: pd DataFrame 
+            DataFrame returned by `json2dataframe` function
+        bools_only: bool (default: True)
+            Whether to return just the boolean enumerations. If False, will scale numerical values. Note, `False` logic not yet implemented
 
-        Returns:
-        --------
-        numpy array of 0-1 values for False-True, and scaled numerical values.
+        Returns
+        -------
+        np ndarray
+            Array of 0-1 values for False-True, and scaled numerical values.
         """
 
         if bools_only:
@@ -526,4 +541,50 @@ class VERIS(object):
             out_df['lower'], out_df['upper'] = np.round(proportion_confint(out_df['x'], out_df['n'], alpha=1-ci_level, method=ci_method), round_freq)
         
         return out_df
+
+
+    def simplebar(self, enum_df, title=None, fill='darkred', use_top=-1, **kwargs):
+        """ Produce a simple horizontal bar chart from an enumeration DataFrame.
+
+        Using the results of `getenum_ci`, produce a simple horizontal bar chart with the enumerations and their frequencies labeled on the plot.
+
+        Parameters
+        ----------
+        enum_df: pd DataFrame
+            DataFrame returned by the `getenum_ci` function. Must have `enum` and `freq` columns.
+        title: str
+            Title for the plot.
+        fill: str
+            Bar fill color
+        use_top: int, (default: -1)
+            Only plot the top `use_top` enumerations (useful for large DataFrames).  A value of -1 defaults to the entire DataFrame
+        **kwargs: 
+            Additional arguments to pass to `matplotlib.pyplot.barh`
+
+        Returns
+        -------
+        matplotlib fig
+            Returns the figure just created.
+
+        See Also
+        --------
+        matplotlib.pyplot.barh: Matplotlib horizontal bar plot
+        """
+        if use_top <= 0:
+            use_top = enum_df.shape[0]
+
+        enum_df = enum_df.iloc[:use_top]
+
+        fig, ax = plt.subplots()
+        ax.barh(enum_df['enum'], enum_df['freq'], color=fill, **kwargs)
+        for i, f in enumerate(enum_df['freq']):
+            if np.isnan(f):
+                continue
+            ax.text(f, i, ' {}%'.format(round(100 * f, 0)))
+        if title:
+            plt.title(title)
+        fig.gca().invert_yaxis()
+
+        return fig 
+
 
