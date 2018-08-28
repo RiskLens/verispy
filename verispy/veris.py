@@ -14,15 +14,22 @@ from .patterns import get_pattern
 
 class VERIS(object):
     """ 
-    Build a dataframe from VERIS data
+    Build a DataFrame from VERIS data.
+
+    This class handles building a DataFrame from raw VERIS-formatted JSON objects. It also supplies some convenience analysis functions to analyze enumerations, 
+    their frequencies, and confidence intervals. 
 
     Parameters
     ------------
-    json_dir: str, the directory where the JSON files are stored (locally)
-    verbose: bool, print messages while processing
+    json_dir: str (default: None)
+        The directory where the VERIS-formatted JSON files are stored (locally)
+    verbose: bool (default: False) 
+        Print status messages while processing
+    schema_url: str (default: "https://raw.githubusercontent.com/vz-risk/veris/master/verisc-merged.json")
+        URL where VERIS schema lives.
     """
 
-    def __init__(self, json_dir=None, verbose=False):
+    def __init__(self, json_dir=None, verbose=False, schema_url=veris_const.SCHEMA_URL):
 
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
@@ -31,7 +38,7 @@ class VERIS(object):
         else:
             self.filenames = []
         
-        self.schema_url = veris_const.SCHEMA_URL # I don't want to have to fetch from the internet though  TODO -- READ STATIC FILE FROM INSIDE PACKAGE
+        self.schema_url = schema_url #veris_const.SCHEMA_URL # I don't want to have to fetch from the internet though  TODO -- READ STATIC FILE FROM INSIDE PACKAGE
 
         self.raw_df = None
         self.data = None
@@ -46,12 +53,15 @@ class VERIS(object):
 
         Parameters
         ----------
-        filenames: List of filenames of VERIS-schema files to open
-        verbose: bool, print messages during processing
+        filenames: list
+            Filenames of VERIS-schema files to open
+        verbose: bool, optional (default: False) 
+            Print status messages during processing
 
         Returns
         -------
-        pd.DataFrame of the raw data (no enuemerations)
+        pd DataFrame 
+            The raw data (no enuemerations)
         """
         if verbose : print('Loading JSON files to DataFrame.')
         jsons = []
@@ -65,17 +75,21 @@ class VERIS(object):
         return df_comb
 
     def _enums_from_schema(self, schema, curvarname='', outlist=[]):
-        """ Recursively determine the enumerations from the schema
+        """ Recursively determine the enumerations from the schema.
 
         Parameters
         ----------
-        schema: dict, The VERIS schema JSON, loaded in the json2dataframe
-        curvarname: str, the current varname, gets used in the recursion process
-        outlist: list, list of dictionaries of the enumerations from the schema
+        schema: dict
+            The VERIS schema JSON, loaded in the `json2dataframe` function
+        curvarname: str, (default: '') 
+            The current varname, gets used in the recursion process
+        outlist: list, (default: [])
+            List of dictionaries of the enumerations from the schema
 
         Returns
         -------
-        list of dictionaries of the schema
+        list
+            Dictionaries of the schema
         """
         if type(schema) is dict: 
 
@@ -110,14 +124,17 @@ class VERIS(object):
 
         Parameters
         ----------
-        enums: dict, output of `_build_enumerations_dict`
-        non_enums: list, the non-enumeration variables
-        raw_df: pd DataFrame, output of `_rawjson2dataframe`
+        enums: dict 
+            Output of `_build_enumerations_dict`
+        non_enums: list
+             The non-enumeration variables
+        raw_df: pd DataFrame
+            Output of `_rawjson2dataframe`
 
         Returns
         -------
-        pd DataFrame with columns from the raw DataFrame and enumerations
-
+        pd DataFrame 
+            With columns from the raw DataFrame and enumerations.
         """
 
         # function to check the enumerations in the raw dataframe and set to True-False
@@ -188,15 +205,19 @@ class VERIS(object):
         return comb_df
 
     def _a4names(self, df):
-        """ Add in the A4 Names and their "sums" (A4: http://veriscommunity.net/a4grid.html) 
+        """ Add in the A4 Names and their "sums" (A4: http://veriscommunity.net/a4grid.html).
+
+        This function is normally called from `json2dataframe` and should not be called individually.
 
         Parameters
         ----------
-        df: pd DataFrame following from `self._combine_enums_raw_df`
+        df: pd DataFrame 
+            DataFrame following from `self._combine_enums_raw_df`
 
         Returns
         -------
-        pd DataFrame with A4 names and values added in
+        pd DataFrame 
+            With A4 names and values added in.
         """
 
         revassetmap = {veris_const.ASSETMAP[key]: key for key in veris_const.ASSETMAP}
@@ -245,15 +266,17 @@ class VERIS(object):
         return df
 
     def _victim_postproc(self, df):
-        """ Fill in the victim industries with the 2-digit and 3-digit enumerations columns. And more info about orgsize
+        """ Fill in the victim industries with the 2-digit and 3-digit enumerations columns, and additional information about organization size.
 
         Parameters
         ----------
-        df: pd DataFrame with at least a `victim.industry` column
+        df: pd DataFrame 
+            A processed data frame (from `json2dataframe`) with a `victim.industry` column.
 
         Returns
         -------
-        pd DataFrame with moar `victim.industry*` columns
+        pd DataFrame 
+            Returns initial DataFrame, but with processed `victim.industry*` columns and orgsize columns.
         """
 
         # get victim industry 2 and 3
@@ -283,15 +306,20 @@ class VERIS(object):
     def load_schema(self, schema_path=None, schema_url=None):
         """ Load the VERIS schema into the VERIS object
 
+        This function is normall called from the `json2dataframe` function; however, if you would like to individually load the schema for whatever reason
+        you may do so here. 
+
         Parameters
         ----------
-        schema_path: str, if you wish to load the schema from local memory
-        schema_url: str, if you wish to specify the path to the schema. schema_path takes precedence if populated. 
-                    Check the object's `schema_url` attribute first 
+        schema_path: str, optional (default: None)
+            Specify a path f you wish to load the schema from local memory.
+        schema_url: str, optional (default: None)
+            If you wish to specify the path to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
+            the schema location may already be in the object.
         Return
         ------
-        None -- Saved into the `self.vschema` attribute of the VERIS object 
-
+        None
+            Schema is stored in the `self.vschema` attribute of the VERIS object 
         """
         if schema_path:  # load from the local computer if possible
             self.schema_path = schema_path
@@ -307,6 +335,7 @@ class VERIS(object):
 
     def get_pattern(self, df):
         """ Generates the patterns as described originally in the 2014 DBIR. 
+
         This function is is almost an exact port from the verisr package: https://github.com/vz-risk/verisr/blob/a293801eb92dda9668844f4f7be14bf5c685d764/R/matrix.R#L78
 
         Parameters
@@ -353,6 +382,7 @@ class VERIS(object):
         """
 
         # load schema
+        if verbose: print('Loading schema')
         self.load_schema(schema_path, schema_url)
 
         raw_df = self._rawjson2dataframe(filenames, verbose)
@@ -585,6 +615,4 @@ class VERIS(object):
             plt.title(title)
         fig.gca().invert_yaxis()
 
-        return fig 
-
-
+        return fig
