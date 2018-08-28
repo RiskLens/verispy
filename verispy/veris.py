@@ -4,6 +4,7 @@ import json
 import urllib.request
 import glob
 import warnings
+import os
 from statsmodels.stats.proportion import proportion_confint
 import matplotlib.pyplot as plt
 
@@ -22,7 +23,7 @@ class VERIS(object):
     Parameters
     ------------
     json_dir: str (default: None)
-        The directory where the VERIS-formatted JSON files are stored (locally)
+        The directory where the VERIS-formatted JSON files are stored (locally).
     verbose: bool (default: False) 
         Print status messages while processing
     schema_url: str (default: "https://raw.githubusercontent.com/vz-risk/veris/master/verisc-merged.json")
@@ -33,7 +34,7 @@ class VERIS(object):
 
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
-            self.filenames = glob.glob('*'.join((json_dir, 'json')))
+            self.filenames = glob.glob(os.path.join(json_dir, '*.json'))
             if verbose : print('Found {} json files.'.format(len(self.filenames)))
         else:
             self.filenames = []
@@ -312,7 +313,7 @@ class VERIS(object):
         Parameters
         ----------
         schema_path: str, optional (default: None)
-            Specify a path f you wish to load the schema from local memory.
+            Specify a path if you wish to load the schema from local memory.
         schema_url: str, optional (default: None)
             If you wish to specify the path to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
             the schema location may already be in the object.
@@ -351,7 +352,7 @@ class VERIS(object):
         """
         return get_pattern(df) 
 
-    def json2dataframe(self, filenames, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
+    def json2dataframe(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
         This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
@@ -363,12 +364,12 @@ class VERIS(object):
 
         Parameters
         ----------
-        filenames: list
-            List of filenames of VERIS-schema files to open, ideally from the local file system.
+        filenames: list, optional (default: None)
+            List of filenames of VERIS-schema files to open, ideally from the local file system. Not needed if `json_dir` passed when object initialized.
         keep_raw: bool (default: False)
             Keep the raw data frame, created before creating the enumerations?  If `True`, it is stored in the `raw_df` attribute in the current object.
         schema_path: str, optional (default: None)
-            Specify a path f you wish to load the schema from local memory.
+            Specify a path if you wish to load the schema from local memory.
         schema_url: str, optional (default: None)
             If you wish to specify the path to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
             the schema location may already be in the object.
@@ -384,6 +385,9 @@ class VERIS(object):
         # load schema
         if verbose: print('Loading schema')
         self.load_schema(schema_path, schema_url)
+
+        if not filenames:
+            filenames = self.filenames
 
         raw_df = self._rawjson2dataframe(filenames, verbose)
 
@@ -570,6 +574,8 @@ class VERIS(object):
             out_df['method'] = ci_method
             out_df['lower'], out_df['upper'] = np.round(proportion_confint(out_df['x'], out_df['n'], alpha=1-ci_level, method=ci_method), round_freq)
         
+        out_df.reset_index(inplace=True, drop=True)
+
         return out_df
 
 
