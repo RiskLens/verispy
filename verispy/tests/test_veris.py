@@ -153,6 +153,74 @@ class Test_VERIS(object):
         assert comb_df[pattern_cols_full].sum(axis=1).all() >= 1
         assert comb_df['pattern'].all() == comb_df['pattern'].all()
 
+    def test_getenum_ci(self):
+
+        v = VERIS(json_dir=os.path.join(os.path.dirname(__file__), 'data'))
+        comb_df = v.json2dataframe() 
+
+        # action enumeration should have 8 rows, 4 columns first of which is "Error"
+        action_ci = v.getenum_ci(comb_df, 'action')
+        assert action_ci.shape == (8, 4)
+        assert action_ci['enum'].iloc[0] == 'Error'
+        assert action_ci['enum'].iloc[-1] == 'Unknown'
+
+        # if use_unk, the n will be greater
+        action_ci_unk = v.getenum_ci(comb_df, 'action', use_unk=True)
+        assert action_ci_unk.shape == action_ci.shape
+        assert action_ci_unk['n'].iloc[0] > action_ci['n'].iloc[0]
+
+        # asking for a column that doesn't exist gives back a df of 0 length
+        donuts_ci = v.getenum_ci(comb_df, 'mmm_donuts')
+        assert donuts_ci.shape == (0, 4)
+
+        # test the "by" keyword
+        by_ci = v.getenum_ci(comb_df, 'action', 'actor')
+        assert by_ci.shape == (32, 5)
+        assert by_ci['by'].iloc[0] == 'actor.External'
+        assert by_ci['enum'].iloc[0] == 'Hacking'
+
+        # test the "wilson" method
+        wilson = v.getenum_ci(comb_df, 'action', 'actor', ci_method='wilson')
+        assert wilson.shape == (32, 8)
+        assert wilson['freq'].iloc[0] < wilson['upper'].iloc[0]
+        assert wilson['freq'].iloc[0] > wilson['lower'].iloc[0]
+        wilson05 = v.getenum_ci(comb_df, 'action', 'actor', ci_method='wilson', ci_level=0.5)
+        assert wilson['upper'].iloc[0] > wilson05['upper'].iloc[0]  # bounds will be wider with first ci_level of 0.95
+        assert wilson['lower'].iloc[0] < wilson05['lower'].iloc[0]
+
+        # nonsensical ci_method should raise error
+        with pytest.raises(NotImplementedError, match=r'donuts'):
+            v.getenum_ci(comb_df, 'action', 'actor', ci_method='donuts')
+
+    def test_simplebar(self):
+
+        v = VERIS(json_dir=os.path.join(os.path.dirname(__file__), 'data'))
+        comb_df = v.json2dataframe() 
+
+        # use this enumeration df:
+        action_ci = v.getenum_ci(comb_df, 'action')
+
+        # test we get an object back (need to figure out how to test this. as long as it doesn't fail I guess it's ok)
+        plot = v.simplebar(action_ci)
+
+        # passing in the original df gives a KeyError
+        with pytest.raises(KeyError, match=r'enum'):
+            v.simplebar(comb_df)
+
+        # ok to pass in matplotlib keys:
+        v.simplebar(action_ci, edgecolor='blue')
+        v.simplebar(action_ci, title='Man Yells at Cloud', fill='yellow')
+
+        # bad matplotlib keys throw error
+        with pytest.raises(AttributeError, match=r'abe_simpson'):
+            v.simplebar(action_ci, abe_simpson='yelling_at_clouds')
+
+
+
+
+
+
+
 
 
 
