@@ -2,8 +2,8 @@
 
 This is a Python package built for working with VERIS data.  This package has two main purposes:  
 
-  1. Allow the user to extract [VERIS](http://veriscommunity.net/) JSON objects into a Pandas DataFrame structure. The most likely source of VERIS data is the VERIS Community Database [VCDB](https://github.com/vz-risk/VCDB).  
-  2. Providing some basic data analysis functionality for the converted DataFrame.  
+  1. Allow the user to extract [VERIS](http://veriscommunity.net/) JSON objects into a Pandas DataFrame structure. The most likely source of VERIS data is the VERIS Community Database ([VCDB](https://github.com/vz-risk/VCDB)).  
+  2. Provide some basic data analysis functionality for the DataFrame.  
 
 This is a relatively close port of the `verisr` package for R users, originally built by [Jay Jacobs](https://github.com/jayjacobs/verisr) and now maintained by the Verizon Security Research & Cyber Intelligence Center at [https://github.com/vz-risk/verisr](https://github.com/vz-risk/verisr).  
 
@@ -59,7 +59,7 @@ Finished building VERIS DataFrame
 
 ## Inspecting Data
 
-Then, of course, we might want to inspect our DataFrame:
+Then, we might want to inspect our DataFrame:
 
 ```python
 >>> veris_df.shape
@@ -165,10 +165,10 @@ Or lower-level enumerations:
 12      Unknown   16    NaN      NaN
 ```
 
-We can add a second variable as the `by` parameter:  
+We can add a second variable as the `by` parameter, and thus get enumerations subsetted by the "by":  
 
 ```python
->>> v.getenum_ci(veris_df, 'action', 'attribute')
+>>> v.getenum_ci(veris_df, 'action', by='attribute')
                            by           enum     x       n     freq
 0      attribute.Availability       Physical  1148  2342.0  0.49018
 1      attribute.Availability        Hacking   664  2342.0  0.28352
@@ -216,7 +216,7 @@ We can add in a confidence interval by specifying the `ci_method` (currently sup
 12      Unknown   16    NaN      NaN  wilson      NaN      NaN
 ```
 
-And we can change the confidence interval (default is 0.95):
+And we can change the confidence interval width with `ci_level` (default is 0.95):
 
 ```python
 >>> v.getenum_ci(veris_df, 'action.social.variety', ci_method='wilson', ci_level=0.5)
@@ -236,7 +236,7 @@ And we can change the confidence interval (default is 0.95):
 12      Unknown   16    NaN      NaN  wilson      NaN      NaN
 ```
 
-The `getenum_ci` function returns a DataFrame. We can then draw a simple horizontal bar chart with the `simplebar` function:
+The `getenum_ci` function returns a DataFrame. With this enumeration DataFrame, we can then draw a simple horizontal bar chart with the `simplebar` function:
 
 ```python
 >>> actionci_df = v.getenum_ci(veris_df, 'action')
