@@ -1,4 +1,5 @@
 # Package written by Tyler Byers at RiskLens
+# tbyers@risklens.com
 # Spokane, WA USA
 # Copyright 2018 RiskLens
 
