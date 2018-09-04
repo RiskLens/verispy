@@ -48,6 +48,7 @@ class VERIS(object):
         self.schema_path = None
         self.matrix_enums = veris_const.MATRIX_ENUMS
         self.matrix_ignore = veris_const.MATRIX_IGNORE
+        self.industry_by_title = industry_const.INDUSTRY_BY_TITLE
 
     def _rawjson2dataframe(self, filenames, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame.

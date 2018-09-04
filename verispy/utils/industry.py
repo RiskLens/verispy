@@ -4,7 +4,7 @@
 
 INDUSTRY_LONG = [
   { "code": "00",   # this actually isn't in the VERIS, added in by TGB
-    "title": "Unknown", 
+    "title": "Non Categorized", 
     "short": "Unknown",
     "shorter": "Unknown"
   }, 
@@ -16,7 +16,7 @@ INDUSTRY_LONG = [
   },
   {
     "code": "21",
-    "title": "Mining",
+    "title": "Mining, Quarrying, and Oil and Gas Extraction",
     "short": "Mining (21)",
     "shorter": "Mining"
   },
@@ -82,19 +82,19 @@ INDUSTRY_LONG = [
   },
   {
     "code": "51",
-    "title": "Information",
+    "title": "Information Services",
     "short": "Information (51)",
     "shorter": "Information"
   },
   {
     "code": "52",
-    "title": "Finance and Insurance",
+    "title": "Finance and Insurances",
     "short": "Finance (52)",
     "shorter": "Finance"
   },
   {
     "code": "53",
-    "title": "Real Estate Rental and Leasing",
+    "title": "Real Estate and Rental and Leasing",
     "short": "Real Estate (53)",
     "shorter": "Real Estate"
   },
@@ -155,3 +155,11 @@ INDUSTRY_LONG = [
 ]
 
 INDUSTRY_BY_CODE = {ind['code'] : ind for ind in INDUSTRY_LONG}
+
+INDUSTRY_BY_TITLE = {}
+for ind in INDUSTRY_LONG:
+    if ind['title'] not in INDUSTRY_BY_TITLE:
+        INDUSTRY_BY_TITLE[ind['title']] = {'code': [ind['code']], 'short': [ind['short']], 'shorter': ind['shorter']}
+    else:
+        INDUSTRY_BY_TITLE[ind['title']]['code'].append(ind['code'])
+        INDUSTRY_BY_TITLE[ind['title']]['short'].append(ind['short'])
