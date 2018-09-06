@@ -1,7 +1,3 @@
-# as fetched directly from `verisr` using the following commands:
-# > data(industry2, envir = environment(), package='verisr')
-# > jsonlite::toJSON(industry2, pretty = TRUE)
-
 INDUSTRY_LONG = [
   { "code": "00",   # this actually isn't in the VERIS, added in by TGB
     "title": "Non Categorized", 
