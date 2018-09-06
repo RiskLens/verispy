@@ -1,5 +1,5 @@
 INDUSTRY_LONG = [
-  { "code": "00",   # this actually isn't in the VERIS, added in by TGB
+  { "code": "00",   
     "title": "Non Categorized", 
     "short": "Unknown",
     "shorter": "Unknown"
