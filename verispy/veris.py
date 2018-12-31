@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 
 from .utils import industry as industry_const
 from .utils import constants as veris_const
-from .patterns import get_pattern
 
 
 class VERIS(object):
@@ -334,25 +333,6 @@ class VERIS(object):
                 vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
-
-    def get_pattern(self, df):
-        """ Generates the patterns as described originally in the 2014 DBIR. 
-
-        This function is is almost an exact port from the verisr package: https://github.com/vz-risk/verisr/blob/a293801eb92dda9668844f4f7be14bf5c685d764/R/matrix.R#L78
-
-        Parameters
-        ----------
-        df: pd DataFrame
-            VERIS-formatted Pandas DataFrame. 
-
-        Returns
-        -------
-        pd DataFrame
-            DataFrame with the patterns. Note: does not return the original VERIS data frame.
-
-        """
-        return get_pattern(df) 
-
     def json2dataframe(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
@@ -412,10 +392,6 @@ class VERIS(object):
 
         # victim industries
         comb_df = self._victim_postproc(comb_df)
-
-        # add in the breach "patterns"
-        patterns = self.get_pattern(comb_df)
-        comb_df = pd.concat([comb_df, patterns], axis=1)
 
         # sort columns alphabetically
         comb_df = comb_df.reindex(sorted(comb_df.columns), axis=1)

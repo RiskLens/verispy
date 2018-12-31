@@ -130,29 +130,6 @@ class Test_VERIS(object):
         assert comb_df['victim.industry3'].all() == \
                comb_df['victim.industry'].apply(lambda x: str(x)[:3] if not pd.isnull(x) else None).all()
 
-    def test_patterns(self):
-        v = VERIS()
-        fnames = glob.glob(os.path.join(os.path.dirname(__file__), 'data', '*json'))
-        comb_df = v.json2dataframe(fnames)
-        colnames = comb_df.columns
-        pattern_df = v.get_pattern(comb_df)
-
-        pattern_cols_req = ['Point of Sale', 'Web Applications', 'Privilege Misuse', 'Lost and Stolen Assets', \
-                            'Miscellaneous Errors', 'Crimeware', 'Payment Card Skimmers', 'Denial of Service', \
-                            'Cyber-Espionage', 'Everything Else']
-        pattern_cols_full = ['.'.join(('pattern', pat)) for pat in pattern_cols_req] + ['pattern']
-
-
-        for col in pattern_df.columns:
-            assert col in colnames
-            assert col in pattern_cols_full
-            assert pattern_df[col].all() == comb_df[col].all()
-
-        assert pattern_df['pattern'].all() in pattern_cols_req
-
-        assert comb_df[pattern_cols_full].sum(axis=1).all() >= 1
-        assert comb_df['pattern'].all() == comb_df['pattern'].all()
-
     def test_getenum_ci(self):
 
         v = VERIS(json_dir=os.path.join(os.path.dirname(__file__), 'data'))
