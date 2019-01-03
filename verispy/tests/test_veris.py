@@ -18,7 +18,7 @@ class Test_VERIS(object):
         v = VERIS()
         fnames = glob.glob(os.path.join(os.path.dirname(__file__), 'data', '*json'))
         num_files = 10
-        raw_df = v._rawjson2dataframe(fnames[:num_files])
+        raw_df = v._rawjson_to_df(fnames[:num_files])
         assert type(raw_df) is pd.DataFrame
         assert raw_df.shape == (num_files, 85)
 
@@ -39,7 +39,7 @@ class Test_VERIS(object):
     def test_combine_enums_raw_df(self):
         v = VERIS()
         fnames = glob.glob(os.path.join(os.path.dirname(__file__), 'data', '*json'))
-        raw_df = v._rawjson2dataframe(fnames)
+        raw_df = v._rawjson_to_df(fnames)
         v.load_schema(schema_path=os.path.join(os.path.dirname(__file__), 'data', 'schema', 'verisc-merged.json'))
         enum_list = v._enums_from_schema(v.vschema)
 
@@ -72,11 +72,11 @@ class Test_VERIS(object):
                 assert comb_df[itemname].dtype in ['float', 'int']
 
 
-    def test_a4_names(self):
-        # from here out, just going to run the json2dataframe procedure and then test individual func results
+    def test_aggregate_a4s(self):
+        # from here out, just going to run the json_to_df procedure and then test individual func results
         v = VERIS()
         fnames = glob.glob(os.path.join(os.path.dirname(__file__), 'data', '*json'))
-        comb_df = v.json2dataframe(fnames)
+        comb_df = v.json_to_df(fnames)
 
         # test a few A4 names
         hacking_sum = comb_df[[col for col in comb_df.columns if col.startswith('action.hacking')]].sum(axis=1)
@@ -111,7 +111,7 @@ class Test_VERIS(object):
     def test_victim_industries(self):
         v = VERIS()
         fnames = glob.glob(os.path.join(os.path.dirname(__file__), 'data', '*json'))
-        comb_df = v.json2dataframe(fnames)
+        comb_df = v.json_to_df(fnames)
 
         # are all victim industries represented?
         industry2s = ['.'.join(('victim.industry2', ind['code'])) for ind in industry_const.INDUSTRY_LONG]
@@ -130,77 +130,66 @@ class Test_VERIS(object):
         assert comb_df['victim.industry3'].all() == \
                comb_df['victim.industry'].apply(lambda x: str(x)[:3] if not pd.isnull(x) else None).all()
 
-    def test_getenum_ci(self):
+    def test_enum_summary(self):
 
         v = VERIS(json_dir=os.path.join(os.path.dirname(__file__), 'data'))
-        comb_df = v.json2dataframe() 
+        comb_df = v.json_to_df() 
 
         # action enumeration should have 8 rows, 4 columns first of which is "Error"
-        action_ci = v.getenum_ci(comb_df, 'action')
+        action_ci = v.enum_summary(comb_df, 'action')
         assert action_ci.shape == (8, 4)
         assert action_ci['enum'].iloc[0] == 'Error'
         assert action_ci['enum'].iloc[-1] == 'Unknown'
 
         # if use_unk, the n will be greater
-        action_ci_unk = v.getenum_ci(comb_df, 'action', use_unk=True)
+        action_ci_unk = v.enum_summary(comb_df, 'action', use_unk=True)
         assert action_ci_unk.shape == action_ci.shape
         assert action_ci_unk['n'].iloc[0] > action_ci['n'].iloc[0]
 
         # asking for a column that doesn't exist gives back a df of 0 length
-        donuts_ci = v.getenum_ci(comb_df, 'mmm_donuts')
+        donuts_ci = v.enum_summary(comb_df, 'mmm_donuts')
         assert donuts_ci.shape == (0, 4)
 
         # test the "by" keyword
-        by_ci = v.getenum_ci(comb_df, 'action', 'actor')
+        by_ci = v.enum_summary(comb_df, 'action', 'actor')
         assert by_ci.shape == (32, 5)
         assert by_ci['by'].iloc[0] == 'actor.External'
         assert by_ci['enum'].iloc[0] == 'Hacking'
 
         # test the "wilson" method
-        wilson = v.getenum_ci(comb_df, 'action', 'actor', ci_method='wilson')
+        wilson = v.enum_summary(comb_df, 'action', 'actor', ci_method='wilson')
         assert wilson.shape == (32, 8)
         assert wilson['freq'].iloc[0] < wilson['upper'].iloc[0]
         assert wilson['freq'].iloc[0] > wilson['lower'].iloc[0]
-        wilson05 = v.getenum_ci(comb_df, 'action', 'actor', ci_method='wilson', ci_level=0.5)
+        wilson05 = v.enum_summary(comb_df, 'action', 'actor', ci_method='wilson', ci_level=0.5)
         assert wilson['upper'].iloc[0] > wilson05['upper'].iloc[0]  # bounds will be wider with first ci_level of 0.95
         assert wilson['lower'].iloc[0] < wilson05['lower'].iloc[0]
 
         # nonsensical ci_method should raise error
         with pytest.raises(NotImplementedError, match=r'donuts'):
-            v.getenum_ci(comb_df, 'action', 'actor', ci_method='donuts')
+            v.enum_summary(comb_df, 'action', 'actor', ci_method='donuts')
 
-    def test_simplebar(self):
+    def test_plot_barchart(self):
 
         v = VERIS(json_dir=os.path.join(os.path.dirname(__file__), 'data'))
-        comb_df = v.json2dataframe() 
+        comb_df = v.json_to_df() 
 
         # use this enumeration df:
-        action_ci = v.getenum_ci(comb_df, 'action')
+        action_ci = v.enum_summary(comb_df, 'action')
 
         # test we get an object back (need to figure out how to test this. as long as it doesn't fail I guess it's ok)
-        plot = v.simplebar(action_ci)
+        plot = v.plot_barchart(action_ci)
 
         # passing in the original df gives a KeyError
         with pytest.raises(KeyError, match=r'enum'):
-            v.simplebar(comb_df)
+            v.plot_barchart(comb_df)
 
         # ok to pass in matplotlib keys:
-        v.simplebar(action_ci, edgecolor='blue')
-        v.simplebar(action_ci, title='Man Yells at Cloud', fill='yellow')
+        v.plot_barchart(action_ci, edgecolor='blue')
+        v.plot_barchart(action_ci, title='Man Yells at Cloud', fill='yellow')
 
         # bad matplotlib keys throw error
         with pytest.raises(AttributeError, match=r'abe_simpson'):
-            v.simplebar(action_ci, abe_simpson='yelling_at_clouds')
-
-
-
-
-
-
-
-
-
-
-
+            v.plot_barchart(action_ci, abe_simpson='yelling_at_clouds')
 
 

@@ -16,8 +16,8 @@ class VERIS(object):
     """ 
     Build a DataFrame from VERIS data.
 
-    This class handles building a DataFrame from raw VERIS-formatted JSON objects. It also supplies some convenience analysis functions to analyze enumerations, 
-    their frequencies, and confidence intervals. 
+    This class handles building a DataFrame from raw VERIS-formatted JSON objects. It also supplies some convenience analysis functions to analyze 
+    and plot enumerations, their frequencies, and confidence intervals. 
 
     Parameters
     ------------
@@ -38,7 +38,7 @@ class VERIS(object):
         else:
             self.filenames = []
         
-        self.schema_url = schema_url #veris_const.SCHEMA_URL # I don't want to have to fetch from the internet though  TODO -- READ STATIC FILE FROM INSIDE PACKAGE
+        self.schema_url = schema_url 
 
         self.raw_df = None
         self.data = None
@@ -49,7 +49,7 @@ class VERIS(object):
         self.matrix_ignore = veris_const.MATRIX_IGNORE
         self.industry_by_title = industry_const.INDUSTRY_BY_TITLE
 
-    def _rawjson2dataframe(self, filenames, verbose=False):
+    def _rawjson_to_df(self, filenames, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame.
 
         Parameters
@@ -81,7 +81,7 @@ class VERIS(object):
         Parameters
         ----------
         schema: dict
-            The VERIS schema JSON, loaded in the `json2dataframe` function
+            The VERIS schema JSON, loaded in the `json_to_df` function
         curvarname: str, (default: '') 
             The current varname, gets used in the recursion process
         outlist: list, (default: [])
@@ -115,13 +115,12 @@ class VERIS(object):
                         newenumfinder = self._enums_from_schema(schema[key], newvarname, outlist)
                     if type(newenumfinder) is dict:
                         outlist.append(newenumfinder) 
-                    # need to handle a couple situations explicitly:
                 
         return outlist
 
 
     def _combine_enums_raw_df(self, enums, non_enums, raw_df):
-        """ Combine the raw data frame with the enumerations from that data frame
+        """ Combine the raw DataFrame with the enumerations from that DataFrame
 
         Parameters
         ----------
@@ -130,7 +129,7 @@ class VERIS(object):
         non_enums: list
              The non-enumeration variables
         raw_df: pd DataFrame
-            Output of `_rawjson2dataframe`
+            Output of `_rawjson_to_df`
 
         Returns
         -------
@@ -205,10 +204,10 @@ class VERIS(object):
 
         return comb_df
 
-    def _a4names(self, df):
-        """ Add in the A4 Names and their "sums" (A4: http://veriscommunity.net/a4grid.html).
+    def _aggregate_a4s(self, df):
+        """ Add in the A4 Names; apply OR operation to the binary vars making up the a4(A4: http://veriscommunity.net/a4grid.html).
 
-        This function is normally called from `json2dataframe` and should not be called individually.
+        This function is normally called from `json_to_df` and should not be called individually.
 
         Parameters
         ----------
@@ -272,7 +271,7 @@ class VERIS(object):
         Parameters
         ----------
         df: pd DataFrame 
-            A processed data frame (from `json2dataframe`) with a `victim.industry` column.
+            A processed data frame (from `json_to_df`) with a `victim.industry` column.
 
         Returns
         -------
@@ -307,7 +306,7 @@ class VERIS(object):
     def load_schema(self, schema_path=None, schema_url=None):
         """ Load the VERIS schema into the VERIS object
 
-        This function is normall called from the `json2dataframe` function; however, if you would like to individually load the schema for whatever reason
+        This function is normall called from the `json_to_df` function; however, if you would like to individually load the schema for whatever reason
         you may do so here. 
 
         Parameters
@@ -333,14 +332,15 @@ class VERIS(object):
                 vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
-    def json2dataframe(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
+    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
         This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
-        from JSON (easy to work with) to a pd DataFrame (slightly easier to work with). This function also requires a valid VERIS schema (in JSON format).
+        from JSON (difficult to work with) to a pd DataFrame (slightly easier to work with). This function also requires a valid VERIS schema (in JSON format).
         At the time of package creation, the VERIS schema was on the [veris GitHub](https://github.com/vz-risk/veris) at 
         [https://raw.githubusercontent.com/vz-risk/veris/master/verisc-merged.json](https://raw.githubusercontent.com/vz-risk/veris/master/verisc-merged.json). 
-        This package also maintains a copy of the schema herein, in case it cannot find the schema online. The user may also specify a new url if needed.
+        This package also maintains a copy of the schema herein, in the data directory, in case it cannot find the schema online. 
+        The user may also specify a new url if needed.
 
 
         Parameters
@@ -370,13 +370,12 @@ class VERIS(object):
         if not filenames:
             filenames = self.filenames
 
-        raw_df = self._rawjson2dataframe(filenames, verbose)
+        raw_df = self._rawjson_to_df(filenames, verbose)
 
         if keep_raw : self.raw_df = raw_df
 
         # build the enumerations
         if verbose : print('Building DataFrame with enumerations.')
-        #self.enumerations = self._build_enumerations_dict(self.vschema)
 
         enum_list = self._enums_from_schema(self.vschema, '', [])
         self.enumerations = {item['name']: item['enumlist'] for item in enum_list if 'enumlist' in item}
@@ -388,7 +387,7 @@ class VERIS(object):
 
         # add in A4 names
         if verbose: print('Post-Processing DataFrame (A4 Names, Victim Industries, Patterns)')
-        comb_df = self._a4names(comb_df)
+        comb_df = self._aggregate_a4s(comb_df)
 
         # victim industries
         comb_df = self._victim_postproc(comb_df)
@@ -400,10 +399,10 @@ class VERIS(object):
 
         return comb_df
 
-    def verisdf2matrix(self, df, bools_only=True):
+    def df_to_matrix(self, df, bools_only=True):
         """ Convert VERIS DataFrame to binary matrix for clustering
 
-        This function takes a DataFrame obtained through the `json2dataframe` function and converts it to a numpy
+        This function takes a DataFrame obtained through the `json_to_df` function and converts it to a numpy
         matrix for use with distance functions.  
 
         To change the default variables filtered on, the user can change the `matrix_enums` or `matrix_ignore` attributes.  
@@ -411,9 +410,9 @@ class VERIS(object):
         Parameters
         ----------
         df: pd DataFrame 
-            DataFrame returned by `json2dataframe` function
+            DataFrame returned by `json_to_df` function
         bools_only: bool (default: True)
-            Whether to return just the boolean enumerations. If False, will scale numerical values. Note, `False` logic not yet implemented
+            Whether to return just the boolean enumerations. If False, will scale numerical values. At this time, `False` logic not yet implemented
 
         Returns
         -------
@@ -429,26 +428,26 @@ class VERIS(object):
             matrix = np.array(df[keep_cols]).astype(int)
             # do we need to save off incident_id or anything like that?
         else:
-            raise NotImplementedError('Need to implement bools_only=False logic.')
+            raise NotImplementedError('The bools_only=False logic is not yet implemented.')
             # with the keep_cols, we need to hold on to the order of those columns *and* their types, as well as scaling
             # factors if and when we implement that part of the code.  This would be helpful in many ways because
             # it would allow us to perhaps pull out sections of the data and matricize it, and then find the "average" for 
             # columns of interest.   
 
-
         return matrix
 
-    def getenum_ci(self, df, enum, by=None, use_unk=False, ci_method=None, ci_level=0.95, round_freq=5):
+    def enum_summary(self, df, enum, by=None, use_unk=False, ci_method=None, ci_level=0.95, round_freq=5):
         ''' Build summary DataFrame given a VERIS enumeration
 
-        This is the primary analysis function for `verispy`. It conducts binomial hypothesistests on veris data to enumerate 
-        the frequency of a given enumeration or set of enumerations within a feature. (For example, 'Malware', 'Hacking', etc within 'action').
+        This function is the primary analysis and summary function for the `verispy` package. At a minimum, it calculates the count and frequency
+        of a given enumeration or set of enumerations within a feature. If desired, it can conduct binomial hypothesis tests on the selected 
+        enumeration. (For example, 'Malware', 'Hacking', etc within 'action').
         The 'by' parameter allows enumerating one feature by another, (for example to count the frequency of each action by year).
 
         Parameters
         ----------
         df: pd DataFrame
-            DataFrame from the `json2dataframe` function
+            DataFrame from the `json_to_df` function
         enum: string
             VERIS feature or enumeration to summarize
         by: string, optional (default: None)
@@ -556,15 +555,15 @@ class VERIS(object):
         return out_df
 
 
-    def simplebar(self, enum_df, title=None, fill='darkred', use_top=-1, **kwargs):
-        """ Produce a simple horizontal bar chart from an enumeration DataFrame.
+    def plot_barchart(self, enum_df, title=None, fill='darkred', use_top=-1, **kwargs):
+        """ Produce a simple horizontal bar chart from an `enum_summary` DataFrame.
 
-        Using the results of `getenum_ci`, produce a simple horizontal bar chart with the enumerations and their frequencies labeled on the plot.
+        Using the results of `enum_summary`, produce a simple horizontal bar chart with the enumerations and their frequencies labeled on the plot.
 
         Parameters
         ----------
         enum_df: pd DataFrame
-            DataFrame returned by the `getenum_ci` function. Must have `enum` and `freq` columns.
+            DataFrame returned by the `enum_summary` function. Must have `enum` and `freq` columns.
         title: str
             Title for the plot.
         fill: str
