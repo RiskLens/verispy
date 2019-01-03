@@ -237,15 +237,14 @@ class VERIS(object):
                     searchname = fullname.lower()
                     searchnames = ['.'.join((attr, suffix)) for attr in self.enumerations \
                                    for suffix in self.enumerations[attr] if attr.startswith(searchname)]
-                    df[fullname] = df[searchnames].sum(axis=1)
 
-                    if suffix == 'Confidentiality':
-                        # TODO: current functionality matches what is done in verisr; however, that appears to be a bug
-                        # what we need to do is remove attribute.confidentiality.data_disclosure.No, 
-                        # and attribute.confidentiality.data_disclosure.Unknown, and possibly
-                        # attribute.confidentiality.data_disclosure.Potentially. However, since this is currently
-                        # in verisr, I'm going to hold off until I can verify further (or possibly ignore??)
-                        pass
+                    if fullname == 'attribute.Confidentiality':
+                        # Need to remove attribute.confidentiality.data_disclosure.No
+                        # and attribute.confidentiality.data_disclosure.Unknown from sum/searchlist
+                        # Unsure if I should leave in attribute.confidentiality.data_disclosure.Potentially.  Will do so for now.
+                        #  Note: after testing both ways, it doesn't much matter, because Trues get summed over the partial values too. 
+                        searchnames.remove('attribute.confidentiality.data_disclosure.No')
+                        searchnames.remove('attribute.confidentiality.data_disclosure.Unknown')
                     elif suffix == 'Unknown': # actor.Unknown, action.Unknown -- should be complement of other A4 enums in its class
                         # get all all other searchnames
                         # TODO: This works but is a mess. would be better to fetch other A4 names after they are created (maybe?)
@@ -257,11 +256,10 @@ class VERIS(object):
                                                 if attr.startswith(searchname) ]
                         df[fullname] = df[unk_searchnames_long].sum(axis=1)
                         df[fullname] = -(df[fullname] - 1) # trick to get True/False working right
-                    else:
-                        pass
+                    
+                    df[fullname] = df[searchnames].sum(axis=1)
+                    # might have some numerical values that should just be True
                     df[fullname] = df[fullname].apply(lambda x: True if x >= 1 else False)
-
-
 
         return df
 
