@@ -238,6 +238,7 @@ class VERIS(object):
                     searchnames = ['.'.join((attr, suffix)) for attr in self.enumerations \
                                    for suffix in self.enumerations[attr] if attr.startswith(searchname)]
 
+                    df[fullname] = df[searchnames].sum(axis=1)
                     if fullname == 'attribute.Confidentiality':
                         # Need to remove attribute.confidentiality.data_disclosure.No
                         # and attribute.confidentiality.data_disclosure.Unknown from sum/searchlist
@@ -245,6 +246,7 @@ class VERIS(object):
                         #  Note: after testing both ways, it doesn't much matter, because Trues get summed over the partial values too. 
                         searchnames.remove('attribute.confidentiality.data_disclosure.No')
                         searchnames.remove('attribute.confidentiality.data_disclosure.Unknown')
+                        df[fullname] = df[searchnames].sum(axis=1)
                     elif suffix == 'Unknown': # actor.Unknown, action.Unknown -- should be complement of other A4 enums in its class
                         # get all all other searchnames
                         # TODO: This works but is a mess. would be better to fetch other A4 names after they are created (maybe?)
@@ -257,7 +259,6 @@ class VERIS(object):
                         df[fullname] = df[unk_searchnames_long].sum(axis=1)
                         df[fullname] = -(df[fullname] - 1) # trick to get True/False working right
                     
-                    df[fullname] = df[searchnames].sum(axis=1)
                     # might have some numerical values that should just be True
                     df[fullname] = df[fullname].apply(lambda x: True if x >= 1 else False)
 

@@ -141,7 +141,7 @@ class Test_VERIS(object):
         assert action_ci['enum'].iloc[0] == 'Error'
         assert action_ci['enum'].iloc[-1] == 'Unknown'
 
-        # if use_unk, the n will be greater
+        # if use_unk, the n will be greater than without
         action_ci_unk = v.enum_summary(comb_df, 'action', use_unk=True)
         assert action_ci_unk.shape == action_ci.shape
         assert action_ci_unk['n'].iloc[0] > action_ci['n'].iloc[0]
