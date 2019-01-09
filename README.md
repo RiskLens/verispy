@@ -150,7 +150,7 @@ Out[12]:
 4        Malware   635  7629.0  0.08324
 5         Social   517  7629.0  0.06777
 6  Environmental     8  7629.0  0.00105
-7        Unknown     6     NaN      NaN
+7        Unknown   210     NaN      NaN
 ```
 
 Or lower-level enumerations:
@@ -187,7 +187,7 @@ Out[14]:
 4      attribute.Availability         Misuse    67  2350.0  0.02851
 5      attribute.Availability         Social    59  2350.0  0.02511
 6      attribute.Availability  Environmental     8  2350.0  0.00340
-7      attribute.Availability        Unknown     0     NaN      NaN
+7      attribute.Availability        Unknown     5     NaN      NaN
 8   attribute.Confidentiality          Error  2231  7057.0  0.31614
 9   attribute.Confidentiality        Hacking  1684  7057.0  0.23863
 10  attribute.Confidentiality         Misuse  1552  7057.0  0.21992
@@ -195,7 +195,7 @@ Out[14]:
 12  attribute.Confidentiality        Malware   555  7057.0  0.07865
 13  attribute.Confidentiality         Social   459  7057.0  0.06504
 14  attribute.Confidentiality  Environmental     2  7057.0  0.00028
-15  attribute.Confidentiality        Unknown     6     NaN      NaN
+15  attribute.Confidentiality        Unknown   198     NaN      NaN
 16        attribute.Integrity        Hacking   916  1833.0  0.49973
 17        attribute.Integrity        Malware   635  1833.0  0.34643
 18        attribute.Integrity         Social   517  1833.0  0.28205
@@ -203,7 +203,7 @@ Out[14]:
 20        attribute.Integrity         Misuse   257  1833.0  0.14021
 21        attribute.Integrity          Error    35  1833.0  0.01909
 22        attribute.Integrity  Environmental     0  1833.0  0.00000
-23        attribute.Integrity        Unknown     2     NaN      NaN
+23        attribute.Integrity        Unknown    15     NaN      NaN
 ```
 
 We can add in a confidence interval by specifying the `ci_method` (currently supported methods: `wilson`, `normal`, or `agresti_coull`, see https://www.statsmodels.org/dev/generated/statsmodels.stats.proportion.proportion_confint.html for more information):
