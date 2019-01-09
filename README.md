@@ -376,7 +376,22 @@ In [40]: plt.show()
 ![TSNE plot with clusters](./fig/tsne_clusters.png)
 
 
+## Unit Testing
 
+Unit tested with `pytest`
+
+```bash
+(veris) verispy $ pytest
+======================================================= test session starts ========================================================
+platform darwin -- Python 3.6.5, pytest-3.5.1, py-1.5.3, pluggy-0.6.0
+rootdir: /Users/tylerbyers/src/verispy, inifile:
+plugins: remotedata-0.2.1, openfiles-0.3.0, doctestplus-0.1.3, arraydiff-0.2
+collected 8 items                                                                                                                  
+
+verispy/tests/test_veris.py ........                                                                                         [100%]
+
+==================================================== 8 passed in 11.50 seconds =====================================================
+```
 
 
 
