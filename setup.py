@@ -1,4 +1,4 @@
-from setuptools import setup
+import setuptools
 
 with open('requirements.txt', 'r') as f:
 	install_requires = f.read().splitlines()
@@ -6,13 +6,13 @@ with open('requirements.txt', 'r') as f:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup(
+setuptools.setup(
 	name='verispy',
-	version='0.1',
+	version='0.1.2',
 	description='Parses VCDB json data into a Pandas DataFrame and provides summary functions and basic enumeration plotting.',
 	author='Tyler Byers',
 	author_email='tbyers@risklens.com',
-	packages=['verispy', 'verispy.tests'],
+	packages=setuptools.find_packages(),
 	license='MIT',
 	long_description=long_description,
 	long_description_content_type="text/markdown",
