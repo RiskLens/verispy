@@ -8,12 +8,12 @@ with open("README.md", "r") as fh:
 
 setup(
 	name='verispy',
-	version='0.1.0',
-	description='Parses VCDB json data into a Pandas DataFrame and provides useful analytic functions',
+	version='0.2',
+	description='Parses VCDB json data into a Pandas DataFrame and provides summary functions and basic enumeration plotting.',
 	author='Tyler Byers',
 	author_email='tbyers@risklens.com',
 	packages=['verispy', 'verispy.tests'],
-	license='LICENSE.txt',
+	license='MIT',
 	long_description=long_description,
 	long_description_content_type="text/markdown",
 	#url='https://fillinwhenIhaveahome'
