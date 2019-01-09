@@ -16,7 +16,7 @@ class VERIS(object):
     """ 
     Build a DataFrame from VERIS data.
 
-    This class handles building a DataFrame from raw VERIS-formatted JSON objects. It also supplies some convenience analysis functions to analyze 
+    This class handles building a DataFrame from raw VERIS-formatted JSON objects. It also supplies some convenient analysis functions to analyze 
     and plot enumerations, their frequencies, and confidence intervals. 
 
     Parameters
@@ -188,7 +188,7 @@ class VERIS(object):
                 if var not in comb_df_cols:
                     comb_df[var] = False
 
-        # add in the variables which were not enumeations
+        # add in the variables which were not enumerations
         comb_df_cols = comb_df.columns
         for vardict in non_enums:
             varname = vardict['name']
@@ -243,13 +243,12 @@ class VERIS(object):
                         # Need to remove attribute.confidentiality.data_disclosure.No
                         # and attribute.confidentiality.data_disclosure.Unknown from sum/searchlist
                         # Unsure if I should leave in attribute.confidentiality.data_disclosure.Potentially.  Will do so for now.
-                        #  Note: after testing both ways, it doesn't much matter, because Trues get summed over the partial values too. 
+                        #  Note: after testing both ways, it doesn't much matter, because `True`s get summed over the partial values too. 
                         searchnames.remove('attribute.confidentiality.data_disclosure.No')
                         searchnames.remove('attribute.confidentiality.data_disclosure.Unknown')
                         df[fullname] = df[searchnames].sum(axis=1)
                     elif suffix == 'Unknown': # actor.Unknown, action.Unknown -- should be complement of other A4 enums in its class
-                        # get all all other searchnames
-                        # TODO: This works but is a mess. would be better to fetch other A4 names after they are created (maybe?)
+                        # get all other searchnames
                         unk_searchnames = ['.'.join((name, suff.lower())) for suff in veris_const.A4NAMES[name] \
                                            if suff != 'Unknown']
                         unk_searchnames_long = ['.'.join((attr, suffix)) for attr in self.enumerations \
@@ -305,7 +304,7 @@ class VERIS(object):
     def load_schema(self, schema_path=None, schema_url=None):
         """ Load the VERIS schema into the VERIS object
 
-        This function is normall called from the `json_to_df` function; however, if you would like to individually load the schema for whatever reason
+        This function is normally called from the `json_to_df` function; however, if you would like to individually load the schema for whatever reason
         you may do so here. 
 
         Parameters
@@ -313,7 +312,7 @@ class VERIS(object):
         schema_path: str, optional (default: None)
             Specify a path if you wish to load the schema from local memory.
         schema_url: str, optional (default: None)
-            If you wish to specify the path to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
+            If you wish to specify the url to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
             the schema location may already be in the object.
         Return
         ------
@@ -351,10 +350,10 @@ class VERIS(object):
         schema_path: str, optional (default: None)
             Specify a path if you wish to load the schema from local memory.
         schema_url: str, optional (default: None)
-            If you wish to specify the path to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
+            If you wish to specify the url to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
             the schema location may already be in the object.
         verbose: bool, (default: False)
-            Print progress messages during processing
+            Print progress messages during processing.
         
         Returns
         -------

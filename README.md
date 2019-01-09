@@ -337,7 +337,7 @@ In [29]: tsne = TSNE(n_components=2, random_state=42)
 In [30]: v_tsne = tsne.fit_transform(vmat)
 ``` 
 
-Finally, we can create a the following plot, which we have colored by DBIR "Pattern", using Seaborn:
+Finally, we can create the following plot, which we have colored by DBIR "Pattern", using Seaborn:
 
 ```python
 In [31]: import seaborn as sns
