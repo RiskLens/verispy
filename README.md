@@ -4,7 +4,7 @@
 <tr>
   <td>Latest Release</td>
   <td>
-    <a href="https://pypi.org/project/pandas/">
+    <a href="https://pypi.org/project/verispy/">
     <img src="https://img.shields.io/pypi/v/verispy.svg" alt="latest release" />
     </a>
   </td>
