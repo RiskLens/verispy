@@ -1,5 +1,6 @@
 # verispy
 
+<img src='fig/verispy_logo.png' alt='verispy logo horizontal bar chart with stylized verispy' align="right">
 This is a Python package built for working with VERIS data.  This package has two main purposes:  
 
   1. Allow the user to extract [VERIS](http://veriscommunity.net/) JSON objects into a Pandas DataFrame structure. The most likely source of VERIS data is the VERIS Community Database ([VCDB](https://github.com/vz-risk/VCDB)).  
