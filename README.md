@@ -1,5 +1,24 @@
 # verispy
 
+<table>
+<tr>
+  <td>Latest Release</td>
+  <td>
+    <a href="https://pypi.org/project/pandas/">
+    <img src="https://img.shields.io/pypi/v/verispy.svg" alt="latest release" />
+    </a>
+  </td>
+</tr>
+<tr>
+  <td>License</td>
+  <td>
+    <a href="https://github.com/RiskLens/verispy/blob/master/LICENSE">
+    <img src="https://img.shields.io/pypi/l/verispy.svg" alt="license" />
+    </a>
+</td>
+</tr>
+</table>
+
 <img src='fig/verispy_logo.png' alt='verispy logo horizontal bar chart with stylized verispy' align="right">
 This is a Python package built for working with VERIS data.  This package has two main purposes:  
 
