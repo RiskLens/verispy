@@ -7,6 +7,7 @@ import warnings
 import os
 from statsmodels.stats.proportion import proportion_confint
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from .utils import industry as industry_const
 from .utils import constants as veris_const
@@ -34,7 +35,9 @@ class VERIS(object):
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
             self.filenames = glob.glob(os.path.join(json_dir, '*.json'))
-            if verbose : print('Found {} json files.'.format(len(self.filenames)))
+            print('Found {} json files.'.format(len(self.filenames)))
+            if len(self.filenames) == 0:
+                print('Heads up!! No valid json files found in specified directory!')
         else:
             self.filenames = []
         
@@ -64,9 +67,9 @@ class VERIS(object):
         pd DataFrame 
             The raw data (no enuemerations)
         """
-        if verbose : print('Loading JSON files to DataFrame.')
+        print('Loading JSON files to DataFrame.')
         jsons = []
-        for j in filenames:
+        for j in tqdm(filenames):
             with open(j, 'r') as f:
                 jf = json.load(f)
             jsons.append(jf)
@@ -165,7 +168,8 @@ class VERIS(object):
 
         comb_df = pd.DataFrame()
         top_level_enums = [enum for enum in enums]
-        for col in raw_df.columns:
+        print('Building enumeration columns.')
+        for col in tqdm(raw_df.columns):
             if col in top_level_enums:
                 # go through the enumerations
                 for item in enums[col]:
@@ -368,6 +372,9 @@ class VERIS(object):
         if not filenames:
             filenames = self.filenames
 
+        if len(filenames) == 0:
+            warnings.warn('No valid JSON filenames passed to `json_to_df` function. This returns a Data Frame with 0 rows.')
+
         raw_df = self._rawjson_to_df(filenames, verbose)
 
         if keep_raw : self.raw_df = raw_df
@@ -393,7 +400,7 @@ class VERIS(object):
         # sort columns alphabetically
         comb_df = comb_df.reindex(sorted(comb_df.columns), axis=1)
 
-        if verbose: print('Finished building VERIS DataFrame')
+        print('Finished building VERIS DataFrame')
 
         return comb_df
 

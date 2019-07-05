@@ -133,8 +133,8 @@ INDUSTRY_LONG = [
   {
     "code": "72",
     "title": "Accommodation and Food Services",
-    "short": "Accomodation (72)",
-    "shorter": "Accomodation"
+    "short": "Accommodation (72)",
+    "shorter": "Accommodation"
   },
   {
     "code": "81",
