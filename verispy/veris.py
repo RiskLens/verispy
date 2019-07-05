@@ -34,7 +34,9 @@ class VERIS(object):
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
             self.filenames = glob.glob(os.path.join(json_dir, '*.json'))
-            if verbose : print('Found {} json files.'.format(len(self.filenames)))
+            print('Found {} json files.'.format(len(self.filenames)))
+            if len(self.filenames) == 0:
+                print('Heads up!! No valid json files found in specified directory!')
         else:
             self.filenames = []
         
@@ -367,6 +369,9 @@ class VERIS(object):
 
         if not filenames:
             filenames = self.filenames
+
+        if len(filenames) == 0:
+            warnings.warn('No valid JSON filenames passed to `json_to_df` function. This returns a Data Frame with 0 rows.')
 
         raw_df = self._rawjson_to_df(filenames, verbose)
 
