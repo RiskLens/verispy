@@ -6,9 +6,13 @@ with open('requirements.txt', 'r') as f:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+version = {}
+with open('verispy/version.py') as fp:
+	exec(fp.read(), version)
+
 setuptools.setup(
 	name='verispy',
-	version='0.1.5',
+	version=version['__version__'],
 	description='Parses VCDB json data into a Pandas DataFrame and provides summary functions and basic enumeration plotting.',
 	author='Tyler Byers',
 	author_email='tbyers@risklens.com',
