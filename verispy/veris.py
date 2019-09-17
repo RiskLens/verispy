@@ -289,6 +289,8 @@ class VERIS(object):
         known_ind_codes = list(industry_const.INDUSTRY_BY_CODE.keys())
         df['victim.industry.name'] = df['victim.industry2'].apply(
             lambda x: industry_const.INDUSTRY_BY_CODE[x]['shorter'] if x in known_ind_codes else 'Unknown')
+        df['victim.industry.fullname'] = df['victim.industry2'].apply(
+            lambda x: industry_const.INDUSTRY_BY_CODE[x]['title'] if x in known_ind_codes else 'Unknown')
 
         # fill out the 2-digit code columns
         for code in industry_const.INDUSTRY_BY_CODE.keys(): #df['victim.industry2'].unique():
