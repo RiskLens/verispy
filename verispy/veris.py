@@ -35,7 +35,7 @@ class VERIS(object):
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
             self.filenames = glob.glob(os.path.join(json_dir, '*.json'))
-            if verbose : print('Found {} json files.'.format(len(self.filenames)))
+            if verbose: print('Found {} json files.'.format(len(self.filenames)))
             if len(self.filenames) == 0:
                 warnings.warn('Heads up!! No valid json files found in specified directory!')
         else:
@@ -67,7 +67,7 @@ class VERIS(object):
         pd DataFrame 
             The raw data (no enuemerations)
         """
-        if verbose : print('Loading JSON files to DataFrame.')
+        if verbose: print('Loading JSON files to DataFrame.')
         jsons = []
         t = tqdm(filenames) if verbose else filenames
         for j in t:
@@ -75,7 +75,7 @@ class VERIS(object):
                 jf = json.load(f)
             jsons.append(jf)
         df_comb = pd.io.json.json_normalize(jsons)
-        if verbose : print('Finished loading JSON files to dataframe.')
+        if verbose: print('Finished loading JSON files to dataframe.')
 
         return df_comb
 
@@ -169,7 +169,7 @@ class VERIS(object):
 
         comb_df = pd.DataFrame()
         top_level_enums = [enum for enum in enums]
-        if verbose : print('Building enumeration columns.')
+        if verbose: print('Building enumeration columns.')
         t = tqdm(raw_df.columns) if verbose else raw_df.columns
         for col in t:
             if col in top_level_enums:
@@ -370,7 +370,7 @@ class VERIS(object):
         """
 
         # load schema
-        if verbose : print('Loading schema')
+        if verbose: print('Loading schema')
         self.load_schema(schema_path, schema_url)
 
         if not filenames:
@@ -381,10 +381,10 @@ class VERIS(object):
 
         raw_df = self._rawjson_to_df(filenames, verbose=verbose)
 
-        if keep_raw : self.raw_df = raw_df
+        if keep_raw: self.raw_df = raw_df
 
         # build the enumerations
-        if verbose : print('Building DataFrame with enumerations.')
+        if verbose: print('Building DataFrame with enumerations.')
 
         enum_list = self._enums_from_schema(self.vschema, '', [])
         self.enumerations = {item['name']: item['enumlist'] for item in enum_list if 'enumlist' in item}
@@ -392,10 +392,10 @@ class VERIS(object):
 
         comb_df = self._combine_enums_raw_df(self.enumerations, self.nonenum_vars, raw_df, verbose=verbose)
 
-        if verbose : print('Done building DataFrame with enumerations.')
+        if verbose: print('Done building DataFrame with enumerations.')
 
         # add in A4 names
-        if verbose : print('Post-Processing DataFrame (A4 Names, Victim Industries, Patterns)')
+        if verbose: print('Post-Processing DataFrame (A4 Names, Victim Industries, Patterns)')
         comb_df = self._aggregate_a4s(comb_df)
 
         # victim industries
@@ -404,7 +404,7 @@ class VERIS(object):
         # sort columns alphabetically
         comb_df = comb_df.reindex(sorted(comb_df.columns), axis=1)
 
-        if verbose : print('Finished building VERIS DataFrame')
+        if verbose: print('Finished building VERIS DataFrame')
 
         return comb_df
 
