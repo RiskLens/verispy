@@ -79,7 +79,7 @@ class VERIS(object):
 
         return df_comb
 
-    def _enums_from_schema(self, schema, curvarname=None, outlist=None)):
+    def _enums_from_schema(self, schema, curvarname=None, outlist=None):
         """ Recursively determine the enumerations from the schema.
 
         Parameters
@@ -101,7 +101,7 @@ class VERIS(object):
         if curvarname is None:
             curvarname = ''
 
-        if type(schema) is dict: 
+        if isinstance(schema, dict): 
 
             if 'items' in schema.keys():
                 if 'enum' in schema['items'].keys():
@@ -123,7 +123,9 @@ class VERIS(object):
                     else:
                         newenumfinder = self._enums_from_schema(schema[key], newvarname, outlist)
                     if type(newenumfinder) is dict:
-                        outlist.append(newenumfinder) 
+                        outlist.append(newenumfinder)
+        else:
+            raise TypeError('Parameter `schema` passed to `_enums_from_schema` must be of type: dict.')
                 
         return outlist
 
