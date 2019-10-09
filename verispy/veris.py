@@ -348,7 +348,7 @@ class VERIS(object):
                 vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
-    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
+    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=True):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
         This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
