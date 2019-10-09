@@ -79,16 +79,16 @@ class VERIS(object):
 
         return df_comb
 
-    def _enums_from_schema(self, schema, curvarname='', outlist=[]):
+    def _enums_from_schema(self, schema, curvarname=None, outlist=None)):
         """ Recursively determine the enumerations from the schema.
 
         Parameters
         ----------
         schema: dict
             The VERIS schema JSON, loaded in the `json_to_df` function
-        curvarname: str, (default: '') 
+        curvarname: str, (default: None) 
             The current varname, gets used in the recursion process
-        outlist: list, (default: [])
+        outlist: list, (default: None)
             List of dictionaries of the enumerations from the schema
 
         Returns
@@ -96,6 +96,11 @@ class VERIS(object):
         list
             Dictionaries of the schema
         """
+        if outlist is None:
+            outlist = []
+        if curvarname is None:
+            curvarname = ''
+
         if type(schema) is dict: 
 
             if 'items' in schema.keys():
