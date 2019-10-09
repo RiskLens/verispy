@@ -30,7 +30,7 @@ class VERIS(object):
         URL where VERIS schema lives.
     """
 
-    def __init__(self, json_dir=None, verbose=False, schema_url=veris_const.SCHEMA_URL):
+    def __init__(self, json_dir=None, verbose=True, schema_url=veris_const.SCHEMA_URL):
 
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
