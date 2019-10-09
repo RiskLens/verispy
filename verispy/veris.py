@@ -80,7 +80,10 @@ class VERIS(object):
         return df_comb
 
     def _enums_from_schema(self, schema, curvarname=None, outlist=None):
-        """ Recursively determine the enumerations from the schema.
+        """ Recursively determine the enumerations from the schema. In essence, it drills
+        down into the schema to look for the "enums" label, and then creates a list
+        of dictionaries with the enumeration name, type, and a list of the enumerations'
+        values.  
 
         Parameters
         ----------
