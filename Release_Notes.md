@@ -1,5 +1,10 @@
 # Release Notes
 
+## Version 0.1.8
+  * Cleaned up a problem in `_enums_from_schema` where the default parameters were mutable
+  objects and the list could potentially grow and grow and grow...
+  * Cleaned up the documentation and type checking in `_enums_from_schema`  
+
 ## Version 0.1.7
   * Fixed problem with verbose=False not silencing all outputs in the `VERIS` class (`/veris/veris.py`).
   * Cleaned up leading space after semicolons in `/veris/veris.py`.

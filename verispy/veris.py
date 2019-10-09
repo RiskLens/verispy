@@ -30,7 +30,7 @@ class VERIS(object):
         URL where VERIS schema lives.
     """
 
-    def __init__(self, json_dir=None, verbose=False, schema_url=veris_const.SCHEMA_URL):
+    def __init__(self, json_dir=None, verbose=True, schema_url=veris_const.SCHEMA_URL):
 
         self.json_dir = json_dir
         if json_dir:  # build when building data frame
@@ -79,16 +79,19 @@ class VERIS(object):
 
         return df_comb
 
-    def _enums_from_schema(self, schema, curvarname='', outlist=[]):
-        """ Recursively determine the enumerations from the schema.
+    def _enums_from_schema(self, schema, curvarname=None, outlist=None):
+        """ Recursively determine the enumerations from the schema. In essence, it drills
+        down into the schema to look for the "enums" label, and then creates a list
+        of dictionaries with the enumeration name, type, and a list of the enumerations'
+        values.  
 
         Parameters
         ----------
         schema: dict
             The VERIS schema JSON, loaded in the `json_to_df` function
-        curvarname: str, (default: '') 
+        curvarname: str, (default: None) 
             The current varname, gets used in the recursion process
-        outlist: list, (default: [])
+        outlist: list, (default: None)
             List of dictionaries of the enumerations from the schema
 
         Returns
@@ -96,7 +99,12 @@ class VERIS(object):
         list
             Dictionaries of the schema
         """
-        if type(schema) is dict: 
+        if outlist is None:
+            outlist = []
+        if curvarname is None:
+            curvarname = ''
+
+        if isinstance(schema, dict): 
 
             if 'items' in schema.keys():
                 if 'enum' in schema['items'].keys():
@@ -118,7 +126,9 @@ class VERIS(object):
                     else:
                         newenumfinder = self._enums_from_schema(schema[key], newvarname, outlist)
                     if type(newenumfinder) is dict:
-                        outlist.append(newenumfinder) 
+                        outlist.append(newenumfinder)
+        else:
+            raise TypeError('Parameter `schema` passed to `_enums_from_schema` must be of type: dict.')
                 
         return outlist
 
@@ -338,7 +348,7 @@ class VERIS(object):
                 vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
-    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=False):
+    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=True):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
         This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
