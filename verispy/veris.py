@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import json
-import urllib.request
+import requests
 import glob
 import warnings
 import os
@@ -344,8 +344,11 @@ class VERIS(object):
         else:
             if schema_url:
                 self.schema_url = schema_url
-            with urllib.request.urlopen(self.schema_url) as url:
-                vschema = json.loads(url.read().decode())
+            r = requests.get(self.schema_url)
+            r.raise_for_status() # check for bad request
+            vschema = r.json()
+            #with urllib.request.urlopen(self.schema_url) as url:
+            #    vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
     def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=True):
