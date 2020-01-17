@@ -125,7 +125,7 @@ class VERIS(object):
                         newenumfinder = self._enums_from_schema(schema['variety'], newvarname, outlist)
                     else:
                         newenumfinder = self._enums_from_schema(schema[key], newvarname, outlist)
-                    if type(newenumfinder) is dict:
+                    if isinstance(newenumfinder, dict):
                         outlist.append(newenumfinder)
         else:
             raise TypeError('Parameter `schema` passed to `_enums_from_schema` must be of type: dict.')
@@ -153,23 +153,23 @@ class VERIS(object):
 
         # function to check the enumerations in the raw dataframe and set to True-False
         def enum_checker(dfitem, enumitem):
-            if type(dfitem) is list:
+            if isinstance(dfitem, list):
                 if enumitem in dfitem:
                     return True
-            elif type(dfitem) is str:
+            elif isinstance(dfitem, str):
                 if enumitem == dfitem:
                     return True
             return False
 
         def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):  
-            if type(dfitem) is list:
+            if isinstance(dfitem, list):
                 for value in dfitem:
-                    if type(value) is dict and variety_or_amt in value.keys() and value['variety'] == enumitem:
+                    if isinstance(value, dict) and variety_or_amt in value.keys() and value['variety'] == enumitem:
                         if variety_or_amt == 'variety':  
                             return True
                         elif variety_or_amt == 'amount':
                             return value[variety_or_amt]
-                    if type(value) is str:
+                    if isinstance(value, str): 
                         if value == enumitem:
                             return True
 
