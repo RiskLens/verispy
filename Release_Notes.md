@@ -1,5 +1,10 @@
 # Release Notes
 
+## Version 0.1.9
+  * Added "global" verbose option.  
+  * Updated in-package schema and unit tests for VERIS version 1.3.4  
+  * Better URL handling, better type checking  
+  
 ## Version 0.1.8
   * Cleaned up a problem in `_enums_from_schema` where the default parameters were mutable
   objects and the list could potentially grow and grow and grow...
