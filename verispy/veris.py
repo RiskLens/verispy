@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import json
-import urllib.request
+import requests
 import glob
 import warnings
 import os
@@ -51,22 +51,22 @@ class VERIS(object):
         self.matrix_enums = veris_const.MATRIX_ENUMS
         self.matrix_ignore = veris_const.MATRIX_IGNORE
         self.industry_by_title = industry_const.INDUSTRY_BY_TITLE
+        self.verbose = verbose
 
-    def _rawjson_to_df(self, filenames, verbose=False):
+    def _rawjson_to_df(self, filenames):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame.
 
         Parameters
         ----------
         filenames: list
             Filenames of VERIS-schema files to open
-        verbose: bool, optional (default: False) 
-            Print status messages during processing
 
         Returns
         -------
         pd DataFrame 
             The raw data (no enuemerations)
         """
+        verbose = self.verbose
         if verbose: print('Loading JSON files to DataFrame.')
         jsons = []
         t = tqdm(filenames) if verbose else filenames
@@ -125,7 +125,7 @@ class VERIS(object):
                         newenumfinder = self._enums_from_schema(schema['variety'], newvarname, outlist)
                     else:
                         newenumfinder = self._enums_from_schema(schema[key], newvarname, outlist)
-                    if type(newenumfinder) is dict:
+                    if isinstance(newenumfinder, dict):
                         outlist.append(newenumfinder)
         else:
             raise TypeError('Parameter `schema` passed to `_enums_from_schema` must be of type: dict.')
@@ -133,7 +133,7 @@ class VERIS(object):
         return outlist
 
 
-    def _combine_enums_raw_df(self, enums, non_enums, raw_df, verbose=False):
+    def _combine_enums_raw_df(self, enums, non_enums, raw_df):
         """ Combine the raw DataFrame with the enumerations from that DataFrame
 
         Parameters
@@ -150,26 +150,27 @@ class VERIS(object):
         pd DataFrame 
             With columns from the raw DataFrame and enumerations.
         """
+        verbose = self.verbose
 
         # function to check the enumerations in the raw dataframe and set to True-False
         def enum_checker(dfitem, enumitem):
-            if type(dfitem) is list:
+            if isinstance(dfitem, list):
                 if enumitem in dfitem:
                     return True
-            elif type(dfitem) is str:
+            elif isinstance(dfitem, str):
                 if enumitem == dfitem:
                     return True
             return False
 
         def var_amt_enum_checker(dfitem, enumitem, variety_or_amt):  
-            if type(dfitem) is list:
+            if isinstance(dfitem, list):
                 for value in dfitem:
-                    if type(value) is dict and variety_or_amt in value.keys() and value['variety'] == enumitem:
+                    if isinstance(value, dict) and variety_or_amt in value.keys() and value['variety'] == enumitem:
                         if variety_or_amt == 'variety':  
                             return True
                         elif variety_or_amt == 'amount':
                             return value[variety_or_amt]
-                    if type(value) is str:
+                    if isinstance(value, str): 
                         if value == enumitem:
                             return True
 
@@ -344,11 +345,14 @@ class VERIS(object):
         else:
             if schema_url:
                 self.schema_url = schema_url
-            with urllib.request.urlopen(self.schema_url) as url:
-                vschema = json.loads(url.read().decode())
+            r = requests.get(self.schema_url)
+            r.raise_for_status() # check for bad request
+            vschema = r.json()
+            #with urllib.request.urlopen(self.schema_url) as url:
+            #    vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
-    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=True):
+    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=None):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
         This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
@@ -370,8 +374,8 @@ class VERIS(object):
         schema_url: str, optional (default: None)
             If you wish to specify the url to the schema. `schema_path` takes precedence if it is populated.  Check the object's `schema_url` attribute first,
             the schema location may already be in the object.
-        verbose: bool, (default: False)
-            Print progress messages during processing.
+        verbose: bool, (default: None)
+            May be set here or upon object instantiation
         
         Returns
         -------
@@ -380,6 +384,11 @@ class VERIS(object):
         """
 
         # load schema
+        if verbose is None:
+            verbose = self.verbose
+        else:
+            self.verbose = verbose 
+            
         if verbose: print('Loading schema')
         self.load_schema(schema_path, schema_url)
 
@@ -389,7 +398,7 @@ class VERIS(object):
         if len(filenames) == 0:
             warnings.warn('No valid JSON filenames passed to `json_to_df` function. This returns a Data Frame with 0 rows.')
 
-        raw_df = self._rawjson_to_df(filenames, verbose=verbose)
+        raw_df = self._rawjson_to_df(filenames)
 
         if keep_raw: self.raw_df = raw_df
 
@@ -400,7 +409,7 @@ class VERIS(object):
         self.enumerations = {item['name']: item['enumlist'] for item in enum_list if 'enumlist' in item}
         self.nonenum_vars = [item for item in enum_list if 'enumlist' not in item]
 
-        comb_df = self._combine_enums_raw_df(self.enumerations, self.nonenum_vars, raw_df, verbose=verbose)
+        comb_df = self._combine_enums_raw_df(self.enumerations, self.nonenum_vars, raw_df)
 
         if verbose: print('Done building DataFrame with enumerations.')
 
