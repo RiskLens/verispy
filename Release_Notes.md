@@ -1,5 +1,8 @@
 # Release Notes
 
+## Version 0.1.10 (hotfix)
+  * Included requests library in requirements.txt
+
 ## Version 0.1.9
   * Added "global" verbose option.  
   * Updated in-package schema and unit tests for VERIS version 1.3.4  
