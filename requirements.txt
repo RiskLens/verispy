@@ -1,7 +1,7 @@
-numpy>=1.14.3
-pytest>=3.5.1
-statsmodels>=0.9.0
-matplotlib>=2.2.2
-pandas>=0.23.0
-tqdm>=4.32.2
+numpy>=1.18.1
+pytest>=5.4.3
+statsmodels>=0.11.1
+matplotlib>=3.2.1
+pandas>=1.0.4
+tqdm>=4.46.0
 requests>=2.23.0

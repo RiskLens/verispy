@@ -74,7 +74,7 @@ class VERIS(object):
             with open(j, 'r') as f:
                 jf = json.load(f)
             jsons.append(jf)
-        df_comb = pd.io.json.json_normalize(jsons)
+        df_comb = pd.json_normalize(jsons)
         if verbose: print('Finished loading JSON files to dataframe.')
 
         return df_comb
