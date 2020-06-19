@@ -1,5 +1,8 @@
 # Release Notes
 
+## Version 0.1.11
+  * Updated requirements mostly for new pandas and numpy versions
+  
 ## Version 0.1.10 (hotfix)
   * Included requests library in requirements.txt
 
