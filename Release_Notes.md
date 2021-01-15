@@ -1,5 +1,8 @@
 # Release Notes
 
+## Version 0.1.12  
+  * Updated in-package schema and unit tests for VERIS version 1.3.5  
+
 ## Version 0.1.11
   * Updated requirements mostly for new pandas and numpy versions
   
