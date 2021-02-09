@@ -1,5 +1,8 @@
 # Release Notes
 
+## Version 0.1.13  
+  * VCDB has a few duplicated incidents in its database now. This update drops those duplicates based on the `incident_id`.  
+  
 ## Version 0.1.12  
   * Updated in-package schema and unit tests for VERIS version 1.3.5  
 

@@ -400,6 +400,12 @@ class VERIS(object):
 
         raw_df = self._rawjson_to_df(filenames)
 
+        # de-duplicate rows -- a few duplicate instances may happen
+        rows_before = raw_df.shape[0]
+        raw_df = raw_df.drop_duplicates(subset=['incident_id'])
+        rows_after = raw_df.shape[0]
+        if verbose: print('Dropped {} rows with duplicated incident_id values.'.format(rows_before-rows_after))
+
         if keep_raw: self.raw_df = raw_df
 
         # build the enumerations
