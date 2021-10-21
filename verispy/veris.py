@@ -53,7 +53,7 @@ class VERIS(object):
         self.industry_by_title = industry_const.INDUSTRY_BY_TITLE
         self.verbose = verbose
 
-    def _rawjson_to_df(self, filenames, encoding):
+    def _rawjson_to_df(self, filenames, encoding='UTF-8'):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame.
 
         Parameters
