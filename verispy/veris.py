@@ -53,13 +53,15 @@ class VERIS(object):
         self.industry_by_title = industry_const.INDUSTRY_BY_TITLE
         self.verbose = verbose
 
-    def _rawjson_to_df(self, filenames):
+    def _rawjson_to_df(self, filenames, encoding='UTF-8'):
         """ Take a directory of VERIS-formatted JSON data and convert it to Pandas data frame.
 
         Parameters
         ----------
         filenames: list
             Filenames of VERIS-schema files to open
+        encoding: str
+            Specify the text encoding of VERIS-schema files to open.
 
         Returns
         -------
@@ -71,7 +73,7 @@ class VERIS(object):
         jsons = []
         t = tqdm(filenames) if verbose else filenames
         for j in t:
-            with open(j, 'r') as f:
+            with open(j, 'r', encoding=encoding) as f:
                 jf = json.load(f)
             jsons.append(jf)
         df_comb = pd.json_normalize(jsons)
@@ -352,7 +354,7 @@ class VERIS(object):
             #    vschema = json.loads(url.read().decode())
         self.vschema = vschema
 
-    def json_to_df(self, filenames=None, keep_raw=False, schema_path=None, schema_url=None, verbose=None):
+    def json_to_df(self, filenames=None, keep_raw=False, encoding='UTF-8', schema_path=None, schema_url=None, verbose=None):
         """ Take a directory of VERIS-formatted JSON data and convert it to pd DataFrame
 
         This is the main data conversion function of the `verispy` package. It takes a directory full of VERIS-formatted JSON files and converts the files
@@ -369,6 +371,8 @@ class VERIS(object):
             List of filenames of VERIS-schema files to open, ideally from the local file system. Not needed if `json_dir` passed when object initialized.
         keep_raw: bool (default: False)
             Keep the raw data frame, created before creating the enumerations?  If `True`, it is stored in the `raw_df` attribute in the current object.
+        encoding: str, optional (default: 'UTF-8')
+            Specify the text encoding of VERIS-schema files to open.
         schema_path: str, optional (default: None)
             Specify a path if you wish to load the schema from local memory.
         schema_url: str, optional (default: None)
@@ -398,7 +402,7 @@ class VERIS(object):
         if len(filenames) == 0:
             warnings.warn('No valid JSON filenames passed to `json_to_df` function. This returns a Data Frame with 0 rows.')
 
-        raw_df = self._rawjson_to_df(filenames)
+        raw_df = self._rawjson_to_df(filenames, encoding)
 
         # de-duplicate rows -- a few duplicate instances may happen
         rows_before = raw_df.shape[0]
